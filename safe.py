@@ -1,26 +1,28 @@
 """
-Hidden race conditions revealed by GIL-free Python.
-Standard: python main.py
-No GIL: uv run --python 3.14t main.py
+Using a lock to protect non-atomic operation.
+Standard: python safe.py
+No GIL: uv run --python 3.14t safe.py
 """
-import sys
+
 import threading
 
-print(f"Python: {sys.version.split()[0]}", end=" -- ")
-print('No GIL' if "free-threading" in sys.version else 'Standard GIL')
+from show_gil import display_gil_info
 
 counter = 0  # Shared state
+
+lock = threading.Lock()
 
 
 def increment(iterations):
     global counter
     for _ in range(iterations):
-        # Non-atomic operation protected by GIL:
-        counter += 1
+        with lock:  # Protect non-atomic operation
+            counter += 1
 
 
 def main():
     global counter
+    display_gil_info()
 
     threads = []
     num_threads = 8
@@ -37,7 +39,6 @@ def main():
     expected = num_threads * iterations_per_thread
     print(f"Expected: {expected:,}")
     print(f"Actual: {counter:,}")
-    print(f"Missing increments: {expected - counter:,}")
 
 
 if __name__ == "__main__":
