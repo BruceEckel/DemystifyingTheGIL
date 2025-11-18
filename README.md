@@ -3,16 +3,16 @@ Pycon 2026 Presentation
 
 With GIL:
 ```
-uv run --python 3.14 main.py
+uv run --python 3.14 unsafe.py
 ```
 
 Without GIL
 ```
-uv run --python 3.14t main.py
+uv run --python 3.14t unsafe.py
 ```
 
-NOTE: uv seems to get stuck using 3.14t so the "With GIL" version ends up using 3.14t anyway, when the virtual environment is active.
-One solution is to not activate the venv and run:
+NOTE: uv seems to get stuck using 3.14t so the "With GIL" version ends up using 3.14t anyway, when the virtual environment is active. 
+One solution is to *not* activate the venv and run:
 ```
-python main.py
+python unsafe.py
 ```
