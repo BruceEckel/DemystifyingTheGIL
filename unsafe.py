@@ -1,7 +1,10 @@
 """
 Hidden race conditions revealed by GIL-free Python.
 Standard: python unsafe.py
+This SHOULD work but uv has problems:
 No GIL: uv run --python 3.14t unsafe.py
+Just run with your local Python:
+python unsafe.py
 """
 
 import threading
