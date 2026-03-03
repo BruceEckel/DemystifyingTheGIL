@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Demystifying The GIL</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #0d1117;
+    color: #e6edf3;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .deck {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+
+  .slide {
+    display: none;
+    max-width: 900px;
+    width: 100%;
+    animation: fadein 0.25s ease;
+  }
+  .slide.active { display: block; }
+
+  @keyframes fadein { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  h1 { font-size: 3rem; font-weight: 700; line-height: 1.15; }
+  h2 { font-size: 2rem; font-weight: 600; margin-bottom: 1.2rem; color: #79c0ff; }
+  .subtitle { font-size: 1.25rem; color: #8b949e; margin-top: 0.5rem; }
+  .tag { display: inline-block; background: #1f6feb; color: #fff; border-radius: 4px; padding: 0.2rem 0.6rem; font-size: 0.85rem; font-weight: 600; margin-bottom: 1rem; }
+
+  p { font-size: 1.15rem; line-height: 1.7; color: #c9d1d9; margin-bottom: 0.8rem; }
+  ul { list-style: none; padding: 0; }
+  ul li { font-size: 1.1rem; color: #c9d1d9; padding: 0.4rem 0 0.4rem 1.5rem; position: relative; line-height: 1.6; }
+  ul li::before { content: '→'; position: absolute; left: 0; color: #58a6ff; font-weight: 700; }
+
+  pre {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 1.2rem 1.4rem;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  }
+  .kw  { color: #ff7b72; }
+  .fn  { color: #d2a8ff; }
+  .cm  { color: #8b949e; font-style: italic; }
+  .st  { color: #a5d6ff; }
+  .num { color: #79c0ff; }
+  .hi  { background: #2d333b; border-left: 3px solid #f85149; padding-left: 0.5rem; margin-left: -0.5rem; display: block; }
+  .hi-green { background: #122520; border-left: 3px solid #3fb950; padding-left: 0.5rem; margin-left: -0.5rem; display: block; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start; }
+
+  .result-box {
+    border-radius: 8px;
+    padding: 1rem 1.4rem;
+    font-family: 'Cascadia Code', monospace;
+    font-size: 0.95rem;
+    line-height: 1.8;
+  }
+  .result-bad  { background: #2d1414; border: 1px solid #f85149; }
+  .result-good { background: #0d2119; border: 1px solid #3fb950; }
+  .red   { color: #f85149; font-weight: 700; }
+  .green { color: #3fb950; font-weight: 700; }
+  .dim   { color: #8b949e; }
+
+  .bytecode {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 1rem 1.4rem;
+    font-family: monospace;
+    font-size: 0.9rem;
+    line-height: 2;
+  }
+  .step { display: flex; align-items: center; gap: 0.75rem; }
+  .badge {
+    display: inline-block;
+    border-radius: 4px;
+    padding: 0.15rem 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    min-width: 5rem;
+    text-align: center;
+  }
+  .badge-load  { background: #1f3a5f; color: #79c0ff; }
+  .badge-op    { background: #3a1f5f; color: #d2a8ff; }
+  .badge-store { background: #1f3a2b; color: #3fb950; }
+  .badge-gil   { background: #f85149; color: #fff; font-size: 0.7rem; }
+
+  .callout {
+    background: #161b22;
+    border-left: 4px solid #58a6ff;
+    border-radius: 0 8px 8px 0;
+    padding: 1rem 1.2rem;
+    margin-top: 1rem;
+    font-size: 1rem;
+    color: #c9d1d9;
+    line-height: 1.6;
+  }
+  .callout strong { color: #58a6ff; }
+
+  .big-center { text-align: center; padding: 2rem 0; }
+  .big-num { font-size: 3.5rem; font-weight: 800; }
+
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    padding: 1rem;
+    border-top: 1px solid #21262d;
+  }
+  button {
+    background: #21262d;
+    color: #c9d1d9;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    padding: 0.45rem 1.1rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.15s;
+  }
+  button:hover { background: #30363d; }
+  button:disabled { opacity: 0.3; cursor: default; }
+  #counter { font-size: 0.85rem; color: #8b949e; min-width: 5rem; text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="deck">
+
+  <!-- 1. Title -->
+  <div class="slide active">
+    <div class="tag">PyCon 2026</div>
+    <h1>Demystifying<br>The GIL</h1>
+    <p class="subtitle">Race conditions, free-threaded Python, and why your threads lied to you.</p>
+  </div>
+
+  <!-- 2. What is the GIL -->
+  <div class="slide">
+    <h2>What is the GIL?</h2>
+    <ul>
+      <li>The <strong>Global Interpreter Lock</strong> is a mutex inside CPython</li>
+      <li>Only one thread executes Python bytecode at a time</li>
+      <li>Protects CPython's internal reference counts from corruption</li>
+      <li>Makes single-threaded code faster — no per-object locking needed</li>
+      <li>Side effect: accidentally hides race conditions in your code</li>
+    </ul>
+    <div class="callout">
+      The GIL is <strong>not</strong> a feature of Python the language — it's an implementation detail of CPython.
+    </div>
+  </div>
+
+  <!-- 3. The non-atomic operation -->
+  <div class="slide">
+    <h2>counter += 1 is not atomic</h2>
+    <p>One innocent line compiles to <em>three</em> bytecode operations:</p>
+    <div class="bytecode">
+      <div class="step"><span class="badge badge-load">LOAD</span> read <code>counter</code> from memory</div>
+      <div class="step"><span class="badge badge-op">ADD</span> compute <code>counter + 1</code></div>
+      <div class="step"><span class="badge badge-store">STORE</span> write result back to <code>counter</code></div>
+    </div>
+    <div class="callout">
+      A thread switch can happen <strong>between any two of these steps</strong>.<br>
+      Two threads read the same value → both increment it → one write is lost.
+    </div>
+  </div>
+
+  <!-- 4. The unsafe demo -->
+  <div class="slide">
+    <h2>unsafe.py — The Race Condition</h2>
+    <pre><span class="cm"># 8 threads, each incrementing 100,000 times</span>
+counter = <span class="num">0</span>
+
+<span class="kw">def</span> <span class="fn">increment</span>(iterations):
+    <span class="kw">global</span> counter
+    <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(iterations):
+<span class="hi">        counter += <span class="num">1</span>  <span class="cm"># ← not atomic!</span></span>
+
+<span class="cm"># Expected: 800,000</span>
+<span class="cm"># With GIL:  800,000  ✓  (GIL serializes the 3 bytecodes)</span>
+<span class="cm"># No GIL:    ???      ✗  (race condition exposed)</span></pre>
+    <p style="margin-top:0.8rem;">Run it:</p>
+    <pre><span class="dim">$</span> python unsafe.py              <span class="cm"># with GIL</span>
+<span class="dim">$</span> uv run --python 3.14t unsafe.py  <span class="cm"># without GIL</span></pre>
+  </div>
+
+  <!-- 5. Results -->
+  <div class="slide">
+    <h2>What You'll See</h2>
+    <div class="two-col">
+      <div>
+        <p style="color:#8b949e; margin-bottom:0.5rem;">Standard Python 3.14 (GIL active)</p>
+        <div class="result-box result-good">
+          Python 3.14: Standard GIL<br>
+          Expected: <span class="green">800,000</span><br>
+          Actual:&nbsp;&nbsp; <span class="green">800,000</span>
+        </div>
+        <p style="margin-top:0.6rem; font-size:0.9rem; color:#8b949e;">GIL serialises the bytecodes — race never fires.</p>
+      </div>
+      <div>
+        <p style="color:#8b949e; margin-bottom:0.5rem;">Python 3.14t (GIL removed)</p>
+        <div class="result-box result-bad">
+          Python 3.14t: No GIL<br>
+          Expected: <span class="red">800,000</span><br>
+          Actual:&nbsp;&nbsp; <span class="red">614,332</span>
+        </div>
+        <p style="margin-top:0.6rem; font-size:0.9rem; color:#8b949e;">Real parallelism exposes the bug.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. The fix -->
+  <div class="slide">
+    <h2>safe.py — Use a Lock</h2>
+    <pre>lock = threading.<span class="fn">Lock</span>()
+
+<span class="kw">def</span> <span class="fn">increment</span>(iterations):
+    <span class="kw">global</span> counter
+    <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(iterations):
+<span class="hi-green">        <span class="kw">with</span> lock:        <span class="cm"># ← protect the non-atomic operation</span></span>
+<span class="hi-green">            counter += <span class="num">1</span></span></pre>
+    <div class="two-col" style="margin-top:1rem;">
+      <div class="result-box result-good">
+        Python 3.14: Standard GIL<br>
+        Actual: <span class="green">800,000</span> ✓
+      </div>
+      <div class="result-box result-good">
+        Python 3.14t: No GIL<br>
+        Actual: <span class="green">800,000</span> ✓
+      </div>
+    </div>
+    <div class="callout" style="margin-top:1rem;">
+      <strong>Correct on both builds.</strong> Don't rely on the GIL for thread safety — use explicit synchronisation.
+    </div>
+  </div>
+
+  <!-- 7. Python 3.14t -->
+  <div class="slide">
+    <h2>Python 3.14t — Free-Threaded</h2>
+    <ul>
+      <li>Experimental build: install the <code>t</code> variant (<code>3.14t</code>) via <code>uv</code> or <code>pyenv</code></li>
+      <li>GIL is disabled by default — threads run in true parallel on multiple cores</li>
+      <li>Exposes latent race conditions that the GIL was silently hiding</li>
+      <li>PEP 703 — "Making the Global Interpreter Lock Optional"</li>
+    </ul>
+    <pre style="margin-top:1rem;"><span class="dim">$</span> uv run --python 3.14t script.py
+
+<span class="cm"># Detect in code:</span>
+<span class="kw">import</span> sys
+free_threading = <span class="st">"free-threading"</span> <span class="kw">in</span> sys.version</pre>
+  </div>
+
+  <!-- 8. Takeaways -->
+  <div class="slide">
+    <h2>Key Takeaways</h2>
+    <ul>
+      <li>The GIL serialises bytecode execution — it's not a deliberate thread-safety guarantee</li>
+      <li><code>counter += 1</code> is a <strong>read-modify-write</strong> — never safe without a lock</li>
+      <li>Code that "works" with threads under CPython may be silently broken</li>
+      <li>Python 3.14t reveals those bugs — use it as a correctness checker</li>
+      <li>Always protect shared mutable state with <code>threading.Lock</code>, <code>queue.Queue</code>, or similar primitives</li>
+    </ul>
+    <div class="callout" style="margin-top:1.2rem; border-color: #3fb950;">
+      <strong style="color:#3fb950;">The rule:</strong> if two threads touch the same data and at least one writes, you need a lock — GIL or not.
+    </div>
+  </div>
+
+</div>
+
+<nav>
+  <button id="prev" onclick="go(-1)" disabled>← Prev</button>
+  <span id="counter">1 / 8</span>
+  <button id="next" onclick="go(1)">Next →</button>
+</nav>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  let cur = 0;
+
+  function go(delta) {
+    slides[cur].classList.remove('active');
+    cur = Math.max(0, Math.min(slides.length - 1, cur + delta));
+    slides[cur].classList.add('active');
+    document.getElementById('prev').disabled = cur === 0;
+    document.getElementById('next').disabled = cur === slides.length - 1;
+    document.getElementById('counter').textContent = `${cur + 1} / ${slides.length}`;
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') go(1);
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')                     go(-1);
+  });
+</script>
+</body>
+</html>
