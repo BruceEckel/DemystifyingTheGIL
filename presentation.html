@@ -17,10 +17,7 @@
     overflow: hidden;
   }
 
-  .progress { height: 2px; background: #21262d; flex-shrink: 0; }
-  .progress-bar { height: 100%; background: #1f6feb; transition: width 0.2s ease; }
-
-  .deck {
+.deck {
     flex: 1;
     display: flex;
     align-items: center;
@@ -190,25 +187,9 @@
   .resource-text strong { color: #e6edf3; }
   .resource-text .url { font-size: 0.82rem; color: #58a6ff; font-family: 'Cascadia Code', Consolas, monospace; }
 
-  /* ── Navigation ── */
-  nav {
-    display: flex; align-items: center; justify-content: center;
-    gap: 1.5rem; padding: 0.75rem 1rem; border-top: 1px solid #21262d;
-    flex-shrink: 0;
-  }
-  button {
-    background: #21262d; color: #c9d1d9; border: 1px solid #30363d;
-    border-radius: 6px; padding: 0.38rem 1rem;
-    cursor: pointer; font-size: 0.875rem; transition: background 0.15s;
-  }
-  button:hover { background: #30363d; }
-  button:disabled { opacity: 0.3; cursor: default; }
-  #slide-counter { font-size: 0.82rem; color: #8b949e; min-width: 4rem; text-align: center; }
 </style>
 </head>
 <body>
-
-<div class="progress"><div class="progress-bar" id="progress-bar"></div></div>
 
 <div class="deck">
 
@@ -530,29 +511,16 @@ _registry = {}
 
 </div><!-- /deck -->
 
-<nav>
-  <button id="prev" onclick="go(-1)" disabled>← Prev</button>
-  <span id="slide-counter"></span>
-  <button id="next" onclick="go(1)">Next →</button>
-</nav>
 
 <script>
   const slides = document.querySelectorAll('.slide');
   const total = slides.length;
   let cur = 0;
 
-  function render() {
-    document.getElementById('prev').disabled = cur === 0;
-    document.getElementById('next').disabled = cur === total - 1;
-    document.getElementById('slide-counter').textContent = `${cur + 1} / ${total}`;
-    document.getElementById('progress-bar').style.width = `${((cur + 1) / total) * 100}%`;
-  }
-
   function go(delta) {
     slides[cur].classList.remove('active');
     cur = Math.max(0, Math.min(total - 1, cur + delta));
     slides[cur].classList.add('active');
-    render();
   }
 
   document.addEventListener('keydown', e => {
@@ -560,7 +528,6 @@ _registry = {}
     if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')                     go(-1);
   });
 
-  render();
 </script>
 </body>
 </html>
