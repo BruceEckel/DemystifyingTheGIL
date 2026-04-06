@@ -1,16 +1,4 @@
-# Demystifying The GIL
-### PyCon 2026 — 30-minute talk outline
-
-Each `##` section = one slide. Bullet points = content to cover.
-
----
-
-## Act 1: The Hook — Live Demo
-<!-- ~6 min -->
-
----
-
-## 1. Title
+## Title
 
 - **Demystifying The GIL**
 - Race conditions, free-threaded Python, and why your threads lied to you
@@ -18,16 +6,7 @@ Each `##` section = one slide. Bullet points = content to cover.
 
 ---
 
-## 2. The Claim Everyone Has Heard
-
-- "Python threads are safe — the GIL protects you"
-- "You don't need locks in Python"
-- "That C race condition can't happen here"
-- Let's test that claim live
-
----
-
-## 3. Live Demo: With GIL
+## Demo With GIL
 
 - 8 threads, each incrementing a shared counter 100,000 times
 - Expected result: **800,000**
@@ -41,36 +20,29 @@ $ python unsafe.py
 
 ---
 
-## 4. Live Demo: Without GIL
+## Demo Without GIL
 
 ```
 $ uv run --python 3.14t unsafe.py
 ```
 
 - Same code. Same machine. Different Python build.
-- Result: **~614,000** ✗ (varies every run)
+- Result: NOT **800,000** ✗ (varies every run)
 - The race condition was always there — the GIL was hiding it
 
 ---
 
-## Act 2: What Just Happened — Inside the GIL
-<!-- ~10 min -->
+## What Is the GIL?
 
----
-
-## 5. What Is the GIL?
-
-- The **Global Interpreter Lock** — a mutex inside CPython
+- A *lock* (aka *mutex*) protects shared memory from simultaneous modification.
+- *Global* + *interpreter*: There's only one protecting the shared memory for the entire enterpreter
 - Only one thread executes Python bytecode at a time
-- Not a Python language feature — it's a CPython implementation detail
-- Other implementations (Jython, PyPy-STM) don't have it
-- Has existed since Python 1.5 (1997)
+- A CPython implementation detail; otherr implementations (Jython, PyPy-STM) don't have it
+- Since Python 1.5 (1997)
 
 ---
 
-## 6. Everything the GIL Does
-
-The GIL is doing far more work than most people realize:
+## What Shared Memory is Protected?
 
 - **Reference counting** — `ob_refcnt` inc/dec must be atomic; GIL makes it so
 - **Memory allocator** — `PyMem_Malloc` / `PyObject_New` are not thread-safe without it
@@ -84,9 +56,7 @@ The GIL is doing far more work than most people realize:
 
 ---
 
-## 7. `counter += 1` Is Not Atomic
-
-One line. Three bytecodes:
+## `counter += 1` Is Not Atomic
 
 ```
 LOAD_GLOBAL   counter       # read value from memory
@@ -94,13 +64,13 @@ BINARY_OP     +  1          # compute counter + 1
 STORE_GLOBAL  counter       # write result back
 ```
 
-- A thread switch can happen **between any two of these steps**
+- A context switch can happen **between any two of these steps**
 - Two threads read the same value → both increment → one write is lost
-- This is a classic **read-modify-write** race condition
+- The classic **read-modify-write** race condition
 
 ---
 
-## 8. Why It "Works" With the GIL
+## Why It "Works" With the GIL
 
 - The GIL is released only at predictable points — every N bytecodes (the "check interval")
 - Those 3 bytecodes are short enough that the GIL often isn't released between them
@@ -110,7 +80,7 @@ STORE_GLOBAL  counter       # write result back
 
 ---
 
-## 9. The Fix: Explicit Locking
+## The Fix: Explicit Locking
 
 ```python
 lock = threading.Lock()
@@ -127,7 +97,7 @@ def increment(iterations):
 
 ---
 
-## 10. Python 3.14t — Free-Threaded Build
+## Python 3.14t — Free-Threaded Build
 
 - PEP 703: "Making the Global Interpreter Lock Optional" (Sam Gross, 2022)
 - Experimental since Python 3.13 — install the `t` variant
@@ -153,7 +123,7 @@ uv run --python 3.14t script.py
 
 ---
 
-## 11. The Iceberg
+## The Iceberg
 
 - You rewrote your code. You added locks. Your tests pass under 3.14t.
 - **But you didn't write most of the code you run.**
@@ -163,7 +133,7 @@ uv run --python 3.14t script.py
 
 ---
 
-## 12. Library Patterns That Will Break
+## Library Patterns That Will Break
 
 Code that is "accidentally thread-safe" today:
 
@@ -176,7 +146,7 @@ Code that is "accidentally thread-safe" today:
 
 ---
 
-## 13. A Concrete Example
+## A Concrete Example
 
 A common pattern in library code today:
 
@@ -198,7 +168,7 @@ Under 3.14t with concurrent `register()` calls:
 
 ---
 
-## 14. Why This Is Hard to Find
+## Why This Is Hard to Find
 
 - Race conditions are **non-deterministic** — the bug may appear 1 in 10,000 runs
 - Your test suite runs sequentially or with low concurrency → green CI
@@ -208,7 +178,7 @@ Under 3.14t with concurrent `register()` calls:
 
 ---
 
-## 15. What You Should Do Now
+## What You Should Do Now
 
 1. **Audit shared mutable state** — anything touched by more than one thread
 2. **Run your test suite under 3.14t** — it will expose latent races that the GIL was hiding
@@ -218,7 +188,7 @@ Under 3.14t with concurrent `register()` calls:
 
 ---
 
-## 16. The Payoff
+## The Payoff
 
 Why bother? Because without the GIL:
 
@@ -230,7 +200,7 @@ Why bother? Because without the GIL:
 
 ---
 
-## 17. The Rule
+## The Rule
 
 > If two threads touch the same data and at least one of them writes,
 > you need a lock — **GIL or not**.
@@ -241,7 +211,7 @@ Why bother? Because without the GIL:
 
 ---
 
-## 18. Resources & Q&A
+## Resources & Q&A
 
 - **PEP 703** — Making the Global Interpreter Lock Optional (Sam Gross)
 - **nogil project** — Sam Gross's original fork that became PEP 703
