@@ -6,7 +6,7 @@ No GIL: uv run --python 3.14t safe.py
 
 import threading
 
-from show_gil import display_gil_info
+from display_gil import gil_info
 
 counter = 0  # Shared state
 
@@ -22,7 +22,7 @@ def increment(iterations):
 
 def main():
     global counter
-    display_gil_info()
+    gil_info()
 
     threads = []
     num_threads = 8
