@@ -22,7 +22,7 @@ def increment(iterations):
 
 def main():
     global counter
-    gil_info()
+    print(gil_info())
 
     threads = []
     num_threads = 8

@@ -5,9 +5,10 @@ import sys
 def gil_info():
     major, minor, *_ = sys.version.split()[0].split(".")
     free_threading = "free-threading" in sys.version
-    print(f"Python {major}.{minor}{'t' if free_threading else ''}", end=": ")
-    print("No GIL" if free_threading else "Standard GIL")
+    tag = f"Python {major}.{minor}{'t' if free_threading else ''}"
+    status = "No GIL" if free_threading else "Standard GIL"
+    return f"{tag}: {status}"
 
 
 if __name__ == "__main__":
-    gil_info()
+    print(gil_info())
