@@ -2,7 +2,7 @@
 import sys
 
 
-def gil_info():
+def gil_info() -> str:
     major, minor, *_ = sys.version.split()[0].split(".")
     free_threading = "free-threading" in sys.version
     tag = f"Python {major}.{minor}{'t' if free_threading else ''}"
