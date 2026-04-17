@@ -15,7 +15,7 @@ Without the GIL, the race is continuous and the result is wrong.
 import sys
 
 import constants as c
-from gil_utils import gil_info, run_threads
+from gil_utils import gil_info, report, run_threads
 
 EXPECTED = c.EXPECTED
 
@@ -56,16 +56,11 @@ def run_threaded_fast_switch() -> None:
         sys.setswitchinterval(original)
 
 
-def report(label: str) -> None:
-    status = "OK" if counter == EXPECTED else f"WRONG  (lost {EXPECTED - counter:,})"
-    print(f"  {label:<12} {counter:>9,}   {status}")
-
-
 if __name__ == "__main__":
     print(gil_info())
     run_sequential()
-    report("sequential")
+    report("sequential", counter, EXPECTED)
     run_threaded()
-    report("threaded")
+    report("threaded", counter, EXPECTED)
     run_threaded_fast_switch()
-    report("fast switch")
+    report("fast switch", counter, EXPECTED)

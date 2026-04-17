@@ -14,7 +14,7 @@ positive → memory leak.
 import threading
 
 import constants as c
-from gil_utils import gil_info
+from gil_utils import gil_info, show_status
 
 
 class TrackedObject:
@@ -48,12 +48,13 @@ if __name__ == "__main__":
     t2.join()
 
     n = obj.refcount
-    print(f"Final refcount: {n:+d}  (expected 0)")
-    if n == 0 and not free_threading:
-        print("OK — GIL serialized the LOAD/STORE, race prevented")
-    elif n == 0:
-        print("OK (got lucky — run again)")
+    ok = n == 0
+    if ok and not free_threading:
+        msg = f"{n:+d}  GIL serialized LOAD/STORE"
+    elif ok:
+        msg = f"{n:+d}  got lucky — run again"
     elif n < 0:
-        print("DANGER — negative refcount → use-after-free")
+        msg = f"{n:+d}  negative refcount → use-after-free"
     else:
-        print("DANGER — positive refcount → memory leak")
+        msg = f"{n:+d}  positive refcount → memory leak"
+    show_status("refcount", msg, ok)

@@ -15,7 +15,7 @@ naturally in unsafe.py — just made certain instead of rare.
 import time
 
 import constants as c
-from gil_utils import gil_info, run_threads
+from gil_utils import gil_info, report, run_threads
 
 counter: int = 0
 
@@ -31,9 +31,6 @@ def increment(iterations: int) -> None:
 if __name__ == "__main__":
     print(gil_info())
 
-    run_threads(increment, (50,))
-
-    expected = c.NUM_THREADS * 50
-    print(f"Expected: {expected}")
-    print(f"Actual:   {counter}")
-    print(f"Lost:     {expected - counter}")
+    iters = 50
+    run_threads(increment, (iters,))
+    report("threaded", counter, c.NUM_THREADS * iters)

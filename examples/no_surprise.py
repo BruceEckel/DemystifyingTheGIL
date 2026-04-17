@@ -16,15 +16,15 @@ free-threading, all 8 threads compete for the same lock on every iteration.
 The counter and lock bounce between CPU cache lines as ownership transfers,
 and the OS scheduler wakes and sleeps threads constantly. You get the overhead
 of true parallelism with none of the benefit, because the lock re-serializes
-the threads by design: no two can proceed at the same time. Free-threading only helps when threads work on
-independent data and contention is low.
+the threads by design: no two can proceed at the same time.
+Free-threading only helps when threads work on independent data and contention is low.
 """
 
 import sys
 import threading
 
 import constants as c
-from gil_utils import gil_info, run_threads
+from gil_utils import gil_info, report, run_threads
 
 EXPECTED = c.EXPECTED
 
@@ -67,16 +67,11 @@ def run_threaded_fast_switch() -> None:
         sys.setswitchinterval(original)
 
 
-def report(label: str) -> None:
-    status = "OK" if counter == EXPECTED else f"WRONG  (lost {EXPECTED - counter:,})"
-    print(f"  {label:<12} {counter:>9,}   {status}")
-
-
 if __name__ == "__main__":
     print(gil_info())
     run_sequential()
-    report("sequential")
+    report("sequential", counter, EXPECTED)
     run_threaded()
-    report("threaded")
+    report("threaded", counter, EXPECTED)
     run_threaded_fast_switch()
-    report("fast switch")
+    report("fast switch", counter, EXPECTED)

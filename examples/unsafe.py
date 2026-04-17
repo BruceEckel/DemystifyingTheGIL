@@ -4,7 +4,7 @@ Hidden race conditions revealed by GIL-free Python.
 """
 
 import constants as c
-from gil_utils import gil_info, run_threads
+from gil_utils import gil_info, report, run_threads
 
 counter: int = 0  # Shared state
 
@@ -19,7 +19,4 @@ if __name__ == "__main__":
     print(gil_info())
 
     run_threads(increment, (c.ITERATIONS,))
-
-    expected = c.EXPECTED
-    print(f"Expected: {expected:,}")
-    print(f"Actual: {counter:,}")
+    report("threaded", counter, c.EXPECTED)
