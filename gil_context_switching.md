@@ -72,8 +72,10 @@ simplicity, not calibrated to any particular latency target.
 On 1990s hardware (millions of simple operations per second), 100 opcodes may
 have *accidentally* approximated a few milliseconds. But as hardware got faster,
 100 opcodes shrank to microseconds, and by the time Python 3.2 shipped in 2011,
-threads were fighting over the GIL far more often than intended — hurting
-performance even on workloads that had nothing to gain from parallelism.
+threads were fighting over the GIL far more often than intended — the
+coordination overhead from constant acquire/release cycles hurt performance
+even on single-threaded programs, since the check fired regardless of how
+many threads were running.
 
 ## The current model: 5ms (Python 3.2+)
 
