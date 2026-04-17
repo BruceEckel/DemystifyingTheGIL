@@ -2,7 +2,7 @@
 
 How many opcodes does Python have? 
 The count depends on how you measure and which Python version you're running.
-**Base opcodes** — the ones you see in `dis` output — number roughly **100–130**
+**Base opcodes** (the ones you see in `dis` output) number roughly **100–130**
 in Python 3.13/3.14. You can check exactly:
 
 ```python
@@ -72,7 +72,7 @@ simplicity, not calibrated to any particular latency target.
 On 1990s hardware (millions of simple operations per second), 100 opcodes may
 have *accidentally* approximated a few milliseconds. But as hardware got faster,
 100 opcodes shrank to microseconds, and by the time Python 3.2 shipped in 2011,
-threads were fighting over the GIL far more often than intended — the
+threads were fighting over the GIL far more often than intended. The
 coordination overhead from constant acquire/release cycles hurt performance
 even on single-threaded programs, since the check fired regardless of how
 many threads were running.
@@ -85,7 +85,7 @@ an `eval_breaker` flag every 5ms; the running thread checks that flag and yields
 the GIL when it fires.
 
 In a tight arithmetic loop, roughly **50,000–200,000 opcodes** might execute in
-that 5ms window — wildly more than 100, which illustrates how broken the old
+that 5ms window, wildly more than 100, which illustrates how broken the old
 model had become on modern hardware.
 
 ## When exactly does the GIL release?
@@ -95,12 +95,12 @@ and the running thread releases the GIL the next time it checks that flag. Where
 those checks happen has changed:
 
 - **Python 3.2–3.10**: `eval_breaker` was checked at the top of every opcode
-  dispatch loop iteration — so the GIL released after at most **one more
+  dispatch loop iteration, so the GIL released after at most **one more
   opcode**.
 - **Python 3.11+**: As part of the specializing adaptive interpreter, the check
-  was moved to **backward jumps and function calls only** — a performance
+  was moved to **backward jumps and function calls only**, a performance
   optimization that avoids the overhead of checking on every single opcode.
-  A backward jump (`JUMP_BACKWARD`) is the opcode that closes a loop — it fires
+  A backward jump (`JUMP_BACKWARD`) is the opcode that closes a loop. It fires
   once per iteration of any `for` or `while` loop, when control returns to the
   top. Straight-line code (`if/else`, sequential statements) only jumps forward
   and never triggers a check.
@@ -108,11 +108,11 @@ those checks happen has changed:
 The practical implication: in Python 3.11+, a straight-line sequence of
 opcodes with no loop back-edge or function call will not be interrupted by the
 timer. The `LOAD / BINARY_OP / STORE` sequence for `counter += 1` contains none
-of those check points — which is a significant reason why naïve race-condition
+of those check points, which is a significant reason why naïve race-condition
 demos almost never fail with the GIL active.
 
 Note that in a tight loop with a short body, `JUMP_BACKWARD` fires on every
-iteration — but the GIL only actually releases when the 5ms timer has also
+iteration, but the GIL only actually releases when the 5ms timer has also
 elapsed. The check point and the timer work together: the check point is *where*
 the GIL can release, and the timer controls *when*.
 
@@ -123,7 +123,7 @@ acquired on entry to a critical section and released on exit. The programmer
 controls exactly where switches can occur. The downside is that a thread that
 never yields can starve everything else.
 
-**Preemptive switching** — whether by instruction count or by time — hands that
+**Preemptive switching** (whether by instruction count or by time) hands that
 decision to the scheduler. No thread can starve others, but switches can happen
 *anywhere*, including places the programmer never considered. That is precisely
 the source of the race in `counter += 1`: no one requested a switch between
@@ -167,7 +167,7 @@ def increment(iterations):
 
 `time.sleep()` is a blocking call, and all blocking calls release the GIL. This
 guarantees a context switch occurs between every `LOAD` and `STORE`, making
-lost increments a certainty rather than a rare event — even with the GIL active.
+lost increments a certainty rather than a rare event, even with the GIL active.
 
 With 8 threads and 50 iterations each, the expected result is 400. A typical run
 produces something in the 40–100 range.
@@ -178,7 +178,7 @@ In Python's free-threaded build (`3.14t`, no GIL), `context_switch.py` fails
 without the `sleep(0)` for a more fundamental reason: there is no longer any
 implicit mutual exclusion to accidentally rely on. The `sleep(0)` demo is useful
 precisely because it shows the race *with the GIL active*, making the point that
-the GIL does not protect you from race conditions — it only makes them unlikely
+the GIL does not protect you from race conditions; it only makes them unlikely
 by serializing opcode execution.
 
 ## Summary
