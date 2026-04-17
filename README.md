@@ -144,8 +144,8 @@ With the GIL, threads do not run in parallel, so the lock is rarely contested
 and cheap to acquire. With free-threading, all 8 threads run simultaneously
 on separate cores and compete for the same lock on every iteration. The lock
 and counter bounce between CPU cache lines as ownership transfers, and the OS
-wakes and sleeps threads constantly. The lock re-serializes the threads by
-design, so you get the overhead of true parallelism with none of the benefit.
+wakes and sleeps threads constantly. Our explicit lock re-serializes the threads 
+by design, so you get the overhead of true parallelism with none of the benefit.
 
 The deeper lesson is that free-threading does not automatically make code
 faster. When all threads share one resource and contend on every operation,
