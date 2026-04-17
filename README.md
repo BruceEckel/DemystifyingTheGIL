@@ -147,7 +147,7 @@ and counter bounce between CPU cache lines as ownership transfers, and the OS
 wakes and sleeps threads constantly. The lock re-serializes the threads by
 design, so you get the overhead of true parallelism with none of the benefit.
 
-This is the deeper lesson: free-threading does not automatically make code
+The deeper lesson is that free-threading does not automatically make code
 faster. When all threads share one resource and contend on every operation,
 a lock can make free-threaded code slower than the GIL. The performance
 benefit of free-threading only appears when threads work on independent data
