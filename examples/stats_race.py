@@ -59,15 +59,15 @@ def report(label: str) -> None:
     count_ok = stats.count == EXPECTED
     total_ok = stats.total == EXPECTED
     ok = count_ok and total_ok
-    if ok:
-        status = f"count {stats.count:,}"
-    else:
-        parts = []
-        if not count_ok:
-            parts.append(f"count {stats.count:,}")
-        if not total_ok:
-            parts.append(f"total {stats.total:,.0f}")
-        status = f"{', '.join(parts)}  expected {EXPECTED:,}"
+    match (count_ok, total_ok):
+        case (True, True):
+            status = f"count {stats.count:,}"
+        case (False, True):
+            status = f"count {stats.count:,}  expected {EXPECTED:,}"
+        case (True, False):
+            status = f"total {stats.total:,.0f}  expected {EXPECTED:,}"
+        case (False, False):
+            status = f"count {stats.count:,}, total {stats.total:,.0f}  expected {EXPECTED:,}"
     show_status(label, status, ok)
 
 

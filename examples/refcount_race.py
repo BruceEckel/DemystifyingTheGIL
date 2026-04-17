@@ -48,13 +48,13 @@ if __name__ == "__main__":
     t2.join()
 
     n = obj.refcount
-    ok = n == 0
-    if ok and not free_threading:
-        msg = f"{n:+d}  GIL serialized LOAD/STORE"
-    elif ok:
-        msg = f"{n:+d}  got lucky — run again"
-    elif n < 0:
-        msg = f"{n:+d}  negative refcount → use-after-free"
-    else:
-        msg = f"{n:+d}  positive refcount → memory leak"
-    show_status("refcount", msg, ok)
+    match (n, free_threading):
+        case (0, False):
+            msg = f"{n:+d}  GIL serialized LOAD/STORE"
+        case (0, _):
+            msg = f"{n:+d}  got lucky — run again"
+        case _ if n < 0:
+            msg = f"{n:+d}  negative refcount → use-after-free"
+        case _:
+            msg = f"{n:+d}  positive refcount → memory leak"
+    show_status("refcount", msg, n == 0)
