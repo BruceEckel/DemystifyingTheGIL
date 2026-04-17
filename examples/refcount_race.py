@@ -9,12 +9,6 @@ ob_refcnt manipulation is NOT atomic — it's two operations:
 With the GIL, the LOAD and STORE are serialized — the refcount is always correct.
 Without the GIL, threads interleave freely: negative → premature free (use-after-free);
 positive → memory leak.
-
-Standard:
-    uv run --python 3.14+gil refcount_race.py
-
-No GIL:
-    uv run --python 3.14t refcount_race.py
 """
 
 import threading
@@ -48,8 +42,10 @@ if __name__ == "__main__":
 
     t1 = threading.Thread(target=inc_refcount)
     t2 = threading.Thread(target=dec_refcount)
-    t1.start(); t2.start()
-    t1.join();  t2.join()
+    t1.start()
+    t2.start()
+    t1.join()
+    t2.join()
 
     n = obj.refcount
     print(f"Final refcount: {n:+d}  (expected 0)")
@@ -58,6 +54,6 @@ if __name__ == "__main__":
     elif n == 0:
         print("OK (got lucky — run again)")
     elif n < 0:
-        print(f"DANGER — negative refcount → use-after-free")
+        print("DANGER — negative refcount → use-after-free")
     else:
-        print(f"DANGER — positive refcount → memory leak")
+        print("DANGER — positive refcount → memory leak")

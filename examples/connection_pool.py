@@ -6,12 +6,6 @@ A common library pattern: create an expensive resource on first use.
 With the GIL, the initialization window is rarely interrupted.
 Without the GIL, multiple threads pass the None-check simultaneously
 and the resource is created more than once.
-
-Standard:
-    uv run --python 3.14+gil connection_pool.py
-
-No GIL:
-    uv run --python 3.14t connection_pool.py
 """
 
 import sys

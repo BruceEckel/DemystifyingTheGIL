@@ -1,15 +1,19 @@
 GIL   = uv run --python 3.14+gil
 NOGIL = uv run --python 3.14t
 
-.PHONY: all gil nogil help
+EXAMPLES = unsafe.py safe.py two_variable.py context_switch.py \
+           surprise.py no_surprise.py stats.py connection_pool.py refcount_race.py
+
+.PHONY: all gil nogil help $(EXAMPLES)
 
 .DEFAULT_GOAL := help
 
 help:
 	@echo "Usage:"
-	@echo "  make gil    -- run all examples with the GIL"
-	@echo "  make nogil  -- run all examples without the GIL"
-	@echo "  make all    -- run both"
+	@echo "  make gil          -- run all examples with the GIL"
+	@echo "  make nogil        -- run all examples without the GIL"
+	@echo "  make all          -- run both"
+	@echo "  make <script.py>  -- run one example with GIL then no GIL (no .\ prefix)"
 
 all: gil nogil
 
@@ -52,3 +56,7 @@ nogil:
 	$(NOGIL) connection_pool.py
 	@echo "=== refcount_race.py ==="
 	$(NOGIL) refcount_race.py
+
+$(EXAMPLES):
+	$(GIL) $@
+	$(NOGIL) $@

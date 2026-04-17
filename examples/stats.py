@@ -5,12 +5,6 @@ A stats accumulator whose two fields must stay in sync.
 record() updates count and total on separate lines. A thread switch
 between them leaves the object in an inconsistent state: mean() returns
 a wrong answer, or crashes with ZeroDivisionError if count lags total.
-
-Standard:
-    uv run --python 3.14+gil stats.py
-
-No GIL:
-    uv run --python 3.14t stats.py
 """
 
 import sys

@@ -1,23 +1,23 @@
-# unsafe.py
+# safe.py
 """
-Hidden race conditions revealed by GIL-free Python.
-Standard:
-    uv run --python 3.14+gil unsafe.py
+Using a lock to protect non-atomic operation.
+"""
 
-No GIL:
-    uv run --python 3.14t unsafe.py
-"""
+import threading
 
 import constants as c
 from gil_utils import gil_info, run_threads
 
 counter: int = 0  # Shared state
 
+lock = threading.Lock()
+
 
 def increment(iterations: int) -> None:
     global counter
     for _ in range(iterations):
-        counter += 1  # Not atomic: LOAD, BINARY_OP, STORE
+        with lock:  # Protect non-atomic operation
+            counter += 1
 
 
 if __name__ == "__main__":

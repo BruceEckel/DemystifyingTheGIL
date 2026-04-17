@@ -1,24 +1,27 @@
-# surprise.py
+# no_surprise.py
 """
-A pure function used to update shared state becomes unsafe under free-threading.
+Thread-safe version of surprise.py.
 
-increment(x) is pure: no shared state, no side effects.
-But counter = increment(counter) reads counter, calls the function,
-then writes back. In Python 3.11+, CALL is a GIL check point, so the
-GIL can release between the read and the write.
+The fix: hold a lock across the entire read-modify-write sequence.
+The lock must cover all three steps together:
+    1. read counter
+    2. call increment(counter)
+    3. write counter back
+Locking only the call to increment() would not help, because increment()
+itself is already safe. The race is in steps 1 and 3.
 
-With the GIL, the race can still occur, but the 5ms switch interval makes it
-uncommon. Forcing a much shorter interval (0.0000001s) makes it reliable.
-Without the GIL, the race is continuous and the result is wrong.
-
-With GIL:
-    uv run --python 3.14+gil surprise.py
-
-Without GIL:
-    uv run --python 3.14t surprise.py
+The free-threaded version runs visibly slower. With the GIL, threads don't
+run in parallel, so the lock is rarely contested and cheap to acquire. With
+free-threading, all 8 threads compete for the same lock on every iteration.
+The counter and lock bounce between CPU cache lines as ownership transfers,
+and the OS scheduler wakes and sleeps threads constantly. You get the overhead
+of true parallelism with none of the benefit, because the lock re-serializes
+the threads by design: no two can proceed at the same time. Free-threading only helps when threads work on
+independent data and contention is low.
 """
 
 import sys
+import threading
 
 import constants as c
 from gil_utils import gil_info, run_threads
@@ -26,6 +29,7 @@ from gil_utils import gil_info, run_threads
 EXPECTED = c.EXPECTED
 
 counter: int = 0
+lock = threading.Lock()
 
 
 def increment(x: int) -> int:
@@ -35,7 +39,8 @@ def increment(x: int) -> int:
 def worker() -> None:
     global counter
     for _ in range(c.ITERATIONS):
-        counter = increment(counter)
+        with lock:
+            counter = increment(counter)
 
 
 def run_sequential() -> None:

@@ -13,6 +13,18 @@ uv sync
 The examples require standard Python 3.14 (with GIL) and the free-threaded
 build (3.14t, no GIL). Run `uv python list` to confirm both are installed.
 
+For all examples, run the GIL version and no-GIL (free threaded) version as follows:
+
+```
+Standard:
+    uv run --python 3.14+gil the_example.py
+
+No GIL:
+    uv run --python 3.14t the_example.py
+```
+
+You can also change to the 
+
 ## Step 1: A function that looks completely safe
 
 Start with `surprise.py`. It defines a pure function with no shared state

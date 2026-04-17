@@ -10,12 +10,6 @@ counter += 1 compiles to three steps:
 time.sleep(0) releases the GIL (all blocking calls do), letting another
 thread run between our read and write. This is exactly what happens
 naturally in unsafe.py — just made certain instead of rare.
-
-Standard:
-    uv run --python 3.14+gil context_switch.py
-
-No GIL:
-    uv run --python 3.14t context_switch.py
 """
 
 import time

@@ -1,11 +1,6 @@
 # two_variable.py
 """
 Two variables incremented together -- they should always be equal.
-Standard:
-    uv run --python 3.14+gil two_variable.py
-
-No GIL:
-    uv run --python 3.14t two_variable.py
 """
 
 import constants as c

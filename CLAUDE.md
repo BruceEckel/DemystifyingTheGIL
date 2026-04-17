@@ -8,16 +8,24 @@ PyCon 2026 presentation: "Demystifying The GIL". Demonstrates Python's Global In
 
 ## Running the Scripts
 
-The project uses `uv` with Python 3.14. The venv (`.venv`) is pinned to the free-threaded build (`3.14t`).
+All scripts live in `examples/`. The project uses `uv` with Python 3.14. The venv (`.venv`) is pinned to the free-threaded build (`3.14t`).
 
 **With GIL (standard Python 3.14):**
 ```
-uv run --python 3.14+gil <script.py>
+uv run --python 3.14+gil examples/<script.py>
 ```
 
 **Without GIL (free-threaded Python 3.14t):**
 ```
-uv run --python 3.14t <script.py>
+uv run --python 3.14t examples/<script.py>
+```
+
+**Run all examples via Make (from `examples/`):**
+```
+cd examples
+make gil    # all scripts with GIL
+make nogil  # all scripts without GIL
+make all    # both
 ```
 
 **Install dependencies:**
@@ -37,4 +45,4 @@ uv sync
 - **`no_surprise.py`** — Thread-safe version of `surprise.py`. Lock covers the full read-modify-write sequence. Also demonstrates that free-threaded code with high lock contention can be slower than GIL code.
 - **`connection_pool.py`** — Lazy initialization inside a class: multiple threads pass the `None` check simultaneously and `connect()` runs more than once.
 - **`stats.py`** — A stats accumulator with `count` and `total` updated on separate lines. They can diverge under free-threading, producing a wrong or crashing `mean()`.
-- **`refcount_race.py`** — Simulates CPython's reference count manipulation to show why the GIL is essential for memory safety. Uses `time.sleep(0)` to expose the race between LOAD and STORE on `ob_refcnt`.
+- **`refcount_race.py`** — Simulates CPython's reference count manipulation to show why the GIL is essential for memory safety. With GIL: always correct. Without GIL: refcount drifts, indicating use-after-free or memory leak.
