@@ -100,12 +100,21 @@ those checks happen has changed:
 - **Python 3.11+**: As part of the specializing adaptive interpreter, the check
   was moved to **backward jumps and function calls only** — a performance
   optimization that avoids the overhead of checking on every single opcode.
+  A backward jump (`JUMP_BACKWARD`) is the opcode that closes a loop — it fires
+  once per iteration of any `for` or `while` loop, when control returns to the
+  top. Straight-line code (`if/else`, sequential statements) only jumps forward
+  and never triggers a check.
 
 The practical implication: in Python 3.11+, a straight-line sequence of
 opcodes with no loop back-edge or function call will not be interrupted by the
 timer. The `LOAD / BINARY_OP / STORE` sequence for `counter += 1` contains none
 of those check points — which is a significant reason why naïve race-condition
 demos almost never fail with the GIL active.
+
+Note that in a tight loop with a short body, `JUMP_BACKWARD` fires on every
+iteration — but the GIL only actually releases when the 5ms timer has also
+elapsed. The check point and the timer work together: the check point is *where*
+the GIL can release, and the timer controls *when*.
 
 ## Cooperative vs. preemptive switching
 
