@@ -19,12 +19,11 @@ Without GIL:
 """
 
 import sys
-import threading
 
-import v
-from display_gil import gil_info
+import constants as c
+from gil_utils import gil_info, run_threads
 
-EXPECTED: int = v.NUM_THREADS * v.ITERATIONS
+EXPECTED = c.EXPECTED
 
 counter: int = 0
 
@@ -35,7 +34,7 @@ def increment(x: int) -> int:
 
 def worker() -> None:
     global counter
-    for _ in range(v.ITERATIONS):
+    for _ in range(c.ITERATIONS):
         counter = increment(counter)
 
 
@@ -49,24 +48,16 @@ def run_sequential() -> None:
 def run_threaded() -> None:
     global counter
     counter = 0
-    threads = [threading.Thread(target=worker) for _ in range(v.NUM_THREADS)]
-    for t in threads:
-        t.start()
-    for t in threads:
-        t.join()
+    run_threads(worker)
 
 
 def run_threaded_fast_switch() -> None:
     global counter
     counter = 0
     original = sys.getswitchinterval()
-    sys.setswitchinterval(v.FAST_SWITCH_INTERVAL)
+    sys.setswitchinterval(c.FAST_SWITCH_INTERVAL)
     try:
-        threads = [threading.Thread(target=worker) for _ in range(v.NUM_THREADS)]
-        for t in threads:
-            t.start()
-        for t in threads:
-            t.join()
+        run_threads(worker)
     finally:
         sys.setswitchinterval(original)
 

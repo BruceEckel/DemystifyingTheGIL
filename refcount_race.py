@@ -1,57 +1,63 @@
+# refcount_race.py
 """
 Demonstrates why CPython's GIL is essential for reference-counted GC.
 
-ob_refcnt manipulation is NOT atomic — it's three machine instructions:
-    LOAD  ob_refcnt
-    ADD   1          ← thread switch can happen here
-    STORE ob_refcnt
+ob_refcnt manipulation is NOT atomic — it's two operations:
+    old = obj.refcount      # LOAD
+    obj.refcount = old + 1  # STORE  ← another thread can run between these
 
-Without the GIL, two threads racing on the same object's refcount
-produce incorrect counts: negative → premature free (use-after-free);
+With the GIL, the LOAD and STORE are serialized — the refcount is always correct.
+Without the GIL, threads interleave freely: negative → premature free (use-after-free);
 positive → memory leak.
 
-We simulate this by forcing a GIL-release (time.sleep(0)) between
-the LOAD and STORE to expose the race that the GIL normally prevents.
+Standard:
+    uv run --python 3.14+gil refcount_race.py
+
+No GIL:
+    uv run --python 3.14t refcount_race.py
 """
 
 import threading
-import time
+
+import constants as c
+from gil_utils import gil_info
 
 
 class TrackedObject:
-    """Simulates an object whose ob_refcnt is manipulated by two threads."""
     refcount: int = 0
 
 
 obj: TrackedObject = TrackedObject()
-ITERATIONS: int = 200
+free_threading = "No GIL" in gil_info()
 
 
 def inc_refcount() -> None:
-    for _ in range(ITERATIONS):
-        old = obj.refcount      # LOAD
-        time.sleep(0)           # yield GIL → force context switch
-        obj.refcount = old + 1  # STORE (may clobber concurrent write)
+    for _ in range(c.ITERATIONS):
+        old = obj.refcount
+        obj.refcount = old + 1
 
 
 def dec_refcount() -> None:
-    for _ in range(ITERATIONS):
+    for _ in range(c.ITERATIONS):
         old = obj.refcount
-        time.sleep(0)
         obj.refcount = old - 1
 
 
-t1 = threading.Thread(target=inc_refcount)
-t2 = threading.Thread(target=dec_refcount)
+if __name__ == "__main__":
+    print(gil_info())
 
-t1.start(); t2.start()
-t1.join();  t2.join()
+    t1 = threading.Thread(target=inc_refcount)
+    t2 = threading.Thread(target=dec_refcount)
+    t1.start(); t2.start()
+    t1.join();  t2.join()
 
-print(f"Final refcount : {obj.refcount:+d}  (expected 0)")
-match obj.refcount:
-    case n if n < 0:
-        print("DANGER: negative refcount → object freed while still referenced (use-after-free)")
-    case n if n > 0:
-        print("DANGER: positive refcount → object never freed (memory leak)")
-    case _:
+    n = obj.refcount
+    print(f"Final refcount: {n:+d}  (expected 0)")
+    if n == 0 and not free_threading:
+        print("OK — GIL serialized the LOAD/STORE, race prevented")
+    elif n == 0:
         print("OK (got lucky — run again)")
+    elif n < 0:
+        print(f"DANGER — negative refcount → use-after-free")
+    else:
+        print(f"DANGER — positive refcount → memory leak")

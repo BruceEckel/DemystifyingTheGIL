@@ -1,3 +1,4 @@
+# context_switch.py
 """
 Forces a context switch between LOAD and STORE to make the race visible.
 
@@ -17,11 +18,10 @@ No GIL:
     uv run --python 3.14t context_switch.py
 """
 
-import threading
 import time
 
-import v
-from display_gil import gil_info
+import constants as c
+from gil_utils import gil_info, run_threads
 
 counter: int = 0
 
@@ -37,16 +37,9 @@ def increment(iterations: int) -> None:
 if __name__ == "__main__":
     print(gil_info())
 
-    threads = [
-        threading.Thread(target=increment, args=(50,))
-        for _ in range(v.NUM_THREADS)
-    ]
-    for t in threads:
-        t.start()
-    for t in threads:
-        t.join()
+    run_threads(increment, (50,))
 
-    expected = v.NUM_THREADS * 50
+    expected = c.NUM_THREADS * 50
     print(f"Expected: {expected}")
     print(f"Actual:   {counter}")
     print(f"Lost:     {expected - counter}")

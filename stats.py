@@ -1,3 +1,4 @@
+# stats.py
 """
 A stats accumulator whose two fields must stay in sync.
 
@@ -13,10 +14,9 @@ No GIL:
 """
 
 import sys
-import threading
 
-import v
-from display_gil import gil_info
+import constants as c
+from gil_utils import gil_info, run_threads
 
 
 class Stats:
@@ -33,11 +33,11 @@ class Stats:
 
 
 stats = Stats()
-EXPECTED: int = v.NUM_THREADS * v.ITERATIONS
+EXPECTED = c.EXPECTED
 
 
 def worker() -> None:
-    for _ in range(v.ITERATIONS):
+    for _ in range(c.ITERATIONS):
         stats.record(1)
 
 
@@ -48,19 +48,15 @@ def reset() -> None:
 
 def run_threaded() -> None:
     reset()
-    threads = [threading.Thread(target=worker) for _ in range(v.NUM_THREADS)]
-    for t in threads: t.start()
-    for t in threads: t.join()
+    run_threads(worker)
 
 
 def run_threaded_fast_switch() -> None:
     reset()
     original = sys.getswitchinterval()
-    sys.setswitchinterval(v.FAST_SWITCH_INTERVAL)
+    sys.setswitchinterval(c.FAST_SWITCH_INTERVAL)
     try:
-        threads = [threading.Thread(target=worker) for _ in range(v.NUM_THREADS)]
-        for t in threads: t.start()
-        for t in threads: t.join()
+        run_threads(worker)
     finally:
         sys.setswitchinterval(original)
 

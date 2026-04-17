@@ -1,3 +1,4 @@
+# unsafe.py
 """
 Hidden race conditions revealed by GIL-free Python.
 Standard:
@@ -7,10 +8,8 @@ No GIL:
     uv run --python 3.14t unsafe.py
 """
 
-import threading
-
-import v
-from display_gil import gil_info
+import constants as c
+from gil_utils import gil_info, run_threads
 
 counter: int = 0  # Shared state
 
@@ -24,15 +23,8 @@ def increment(iterations: int) -> None:
 if __name__ == "__main__":
     print(gil_info())
 
-    threads = [
-        threading.Thread(target=increment, args=(v.ITERATIONS,))
-        for _ in range(v.NUM_THREADS)
-    ]
-    for t in threads:
-        t.start()
-    for t in threads:
-        t.join()
+    run_threads(increment, (c.ITERATIONS,))
 
-    expected = v.NUM_THREADS * v.ITERATIONS
+    expected = c.EXPECTED
     print(f"Expected: {expected:,}")
     print(f"Actual: {counter:,}")
