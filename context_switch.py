@@ -20,6 +20,7 @@ No GIL:
 import threading
 import time
 
+import v
 from display_gil import gil_info
 
 counter = 0
@@ -33,27 +34,19 @@ def increment(iterations):
         counter = temp + 1  # STORE (may overwrite another thread's write)
 
 
-def main():
-    global counter
+if __name__ == "__main__":
     print(gil_info())
 
-    num_threads = 8
-    iterations_per_thread = 50
-
     threads = [
-        threading.Thread(target=increment, args=(iterations_per_thread,))
-        for _ in range(num_threads)
+        threading.Thread(target=increment, args=(50,))
+        for _ in range(v.NUM_THREADS)
     ]
     for t in threads:
         t.start()
     for t in threads:
         t.join()
 
-    expected = num_threads * iterations_per_thread
+    expected = v.NUM_THREADS * 50
     print(f"Expected: {expected}")
     print(f"Actual:   {counter}")
     print(f"Lost:     {expected - counter}")
-
-
-if __name__ == "__main__":
-    main()

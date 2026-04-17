@@ -29,11 +29,10 @@ independent data and contention is low.
 import sys
 import threading
 
+import v
 from display_gil import gil_info
 
-NUM_THREADS = 8
-ITERATIONS = 100_000
-EXPECTED = NUM_THREADS * ITERATIONS
+EXPECTED = v.NUM_THREADS * v.ITERATIONS
 
 counter = 0
 lock = threading.Lock()
@@ -45,7 +44,7 @@ def increment(x):
 
 def worker():
     global counter
-    for _ in range(ITERATIONS):
+    for _ in range(v.ITERATIONS):
         with lock:
             counter = increment(counter)
 
@@ -60,7 +59,7 @@ def run_sequential():
 def run_threaded():
     global counter
     counter = 0
-    threads = [threading.Thread(target=worker) for _ in range(NUM_THREADS)]
+    threads = [threading.Thread(target=worker) for _ in range(v.NUM_THREADS)]
     for t in threads:
         t.start()
     for t in threads:
@@ -71,9 +70,9 @@ def run_threaded_fast_switch():
     global counter
     counter = 0
     original = sys.getswitchinterval()
-    sys.setswitchinterval(0.0000001)
+    sys.setswitchinterval(v.FAST_SWITCH_INTERVAL)
     try:
-        threads = [threading.Thread(target=worker) for _ in range(NUM_THREADS)]
+        threads = [threading.Thread(target=worker) for _ in range(v.NUM_THREADS)]
         for t in threads:
             t.start()
         for t in threads:
@@ -87,7 +86,7 @@ def report(label):
     print(f"  {label:<12} {counter:>9,}   {status}")
 
 
-def main():
+if __name__ == "__main__":
     print(gil_info())
     run_sequential()
     report("sequential")
@@ -95,7 +94,3 @@ def main():
     report("threaded")
     run_threaded_fast_switch()
     report("fast switch")
-
-
-if __name__ == "__main__":
-    main()

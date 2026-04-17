@@ -1,11 +1,15 @@
 """
 Using a lock to protect non-atomic operation.
-Standard: python safe.py
-No GIL: uv run --python 3.14t safe.py
+Standard:
+    uv run --python 3.14+gil safe.py
+
+No GIL:
+    uv run --python 3.14t safe.py
 """
 
 import threading
 
+import v
 from display_gil import gil_info
 
 counter = 0  # Shared state
@@ -20,26 +24,18 @@ def increment(iterations):
             counter += 1
 
 
-def main():
-    global counter
+if __name__ == "__main__":
     print(gil_info())
 
-    threads = []
-    num_threads = 8
-    iterations_per_thread = 100000
-
-    for i in range(num_threads):
-        t = threading.Thread(target=increment, args=(iterations_per_thread,))
-        threads.append(t)
+    threads = [
+        threading.Thread(target=increment, args=(v.ITERATIONS,))
+        for _ in range(v.NUM_THREADS)
+    ]
+    for t in threads:
         t.start()
-
     for t in threads:
         t.join()
 
-    expected = num_threads * iterations_per_thread
+    expected = v.NUM_THREADS * v.ITERATIONS
     print(f"Expected: {expected:,}")
     print(f"Actual: {counter:,}")
-
-
-if __name__ == "__main__":
-    main()

@@ -12,14 +12,12 @@ The project uses `uv` with Python 3.14. The venv (`.venv`) is pinned to the free
 
 **With GIL (standard Python 3.14):**
 ```
-python unsafe.py
+uv run --python 3.14+gil <script.py>
 ```
-> Do NOT use `uv run` or activate the venv for this — uv defaults to 3.14t, which defeats the purpose of the demo.
 
 **Without GIL (free-threaded Python 3.14t):**
 ```
-uv run --python 3.14t unsafe.py
-uv run --python 3.14t safe.py
+uv run --python 3.14t <script.py>
 ```
 
 **Install dependencies:**
