@@ -12,11 +12,11 @@ import threading
 import v
 from display_gil import gil_info
 
-a = 0
-b = 0
+a: int = 0
+b: int = 0
 
 
-def go(iterations):
+def go(iterations: int) -> None:
     global a, b
     for _ in range(iterations):
         a += 1

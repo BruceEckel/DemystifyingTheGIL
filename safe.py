@@ -12,12 +12,12 @@ import threading
 import v
 from display_gil import gil_info
 
-counter = 0  # Shared state
+counter: int = 0  # Shared state
 
 lock = threading.Lock()
 
 
-def increment(iterations):
+def increment(iterations: int) -> None:
     global counter
     for _ in range(iterations):
         with lock:  # Protect non-atomic operation

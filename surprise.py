@@ -24,29 +24,29 @@ import threading
 import v
 from display_gil import gil_info
 
-EXPECTED = v.NUM_THREADS * v.ITERATIONS
+EXPECTED: int = v.NUM_THREADS * v.ITERATIONS
 
-counter = 0
+counter: int = 0
 
 
-def increment(x):
+def increment(x: int) -> int:
     return x + 1
 
 
-def worker():
+def worker() -> None:
     global counter
     for _ in range(v.ITERATIONS):
         counter = increment(counter)
 
 
-def run_sequential():
+def run_sequential() -> None:
     global counter
     counter = 0
     for _ in range(EXPECTED):
         counter = increment(counter)
 
 
-def run_threaded():
+def run_threaded() -> None:
     global counter
     counter = 0
     threads = [threading.Thread(target=worker) for _ in range(v.NUM_THREADS)]
@@ -56,7 +56,7 @@ def run_threaded():
         t.join()
 
 
-def run_threaded_fast_switch():
+def run_threaded_fast_switch() -> None:
     global counter
     counter = 0
     original = sys.getswitchinterval()
@@ -71,7 +71,7 @@ def run_threaded_fast_switch():
         sys.setswitchinterval(original)
 
 
-def report(label):
+def report(label: str) -> None:
     status = "OK" if counter == EXPECTED else f"WRONG  (lost {EXPECTED - counter:,})"
     print(f"  {label:<12} {counter:>9,}   {status}")
 

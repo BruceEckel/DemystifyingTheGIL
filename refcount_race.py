@@ -23,8 +23,8 @@ class TrackedObject:
     refcount: int = 0
 
 
-obj = TrackedObject()
-ITERATIONS = 200
+obj: TrackedObject = TrackedObject()
+ITERATIONS: int = 200
 
 
 def inc_refcount() -> None:

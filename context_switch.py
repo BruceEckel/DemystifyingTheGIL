@@ -23,10 +23,10 @@ import time
 import v
 from display_gil import gil_info
 
-counter = 0
+counter: int = 0
 
 
-def increment(iterations):
+def increment(iterations: int) -> None:
     global counter
     for _ in range(iterations):
         temp = counter  # LOAD

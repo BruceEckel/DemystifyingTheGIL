@@ -12,10 +12,10 @@ import threading
 import v
 from display_gil import gil_info
 
-counter = 0  # Shared state
+counter: int = 0  # Shared state
 
 
-def increment(iterations):
+def increment(iterations: int) -> None:
     global counter
     for _ in range(iterations):
         counter += 1  # Not atomic: LOAD, BINARY_OP, STORE
