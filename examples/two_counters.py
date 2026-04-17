@@ -1,4 +1,4 @@
-# two_variable.py
+# two_counters.py
 """
 Two variables incremented together -- they should always be equal.
 """

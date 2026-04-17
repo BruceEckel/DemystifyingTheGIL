@@ -9,7 +9,7 @@ counter += 1 compiles to three steps:
 
 time.sleep(0) releases the GIL (all blocking calls do), letting another
 thread run between our read and write. This is exactly what happens
-naturally in unsafe.py — just made certain instead of rare.
+naturally in counter_race.py — just made certain instead of rare.
 """
 
 import time

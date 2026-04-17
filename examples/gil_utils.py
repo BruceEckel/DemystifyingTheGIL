@@ -27,7 +27,7 @@ def show_status(label: str, status: str, ok: bool) -> None:
 
 def report(label: str, actual: int, expected: int) -> None:
     ok = actual == expected
-    extra = f"   lost {expected - actual:,}" if not ok else ""
+    extra = f"  lost {expected - actual:,}" if not ok else ""
     show_status(label, f"{actual:>9,}{extra}", ok)
 
 

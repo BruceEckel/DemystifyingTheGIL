@@ -1,4 +1,4 @@
-# safe.py
+# counter_lock.py
 """
 Using a lock to protect non-atomic operation.
 """

@@ -1,8 +1,8 @@
 GIL   = uv run --python 3.14+gil
 NOGIL = uv run --python 3.14t
 
-EXAMPLES = unsafe.py safe.py two_variable.py context_switch.py \
-           surprise.py no_surprise.py stats.py connection_pool.py refcount_race.py
+EXAMPLES = counter_race.py counter_lock.py two_counters.py context_switch.py \
+           surprise.py no_surprise.py stats_race.py connection_pool.py refcount_race.py
 
 .PHONY: all gil nogil help $(EXAMPLES)
 
@@ -18,40 +18,40 @@ help:
 all: gil nogil
 
 gil:
-	@echo "=== unsafe.py ==="
-	$(GIL) unsafe.py
-	@echo "=== safe.py ==="
-	$(GIL) safe.py
-	@echo "=== two_variable.py ==="
-	$(GIL) two_variable.py
+	@echo "=== counter_race.py ==="
+	$(GIL) counter_race.py
+	@echo "=== counter_lock.py ==="
+	$(GIL) counter_lock.py
+	@echo "=== two_counters.py ==="
+	$(GIL) two_counters.py
 	@echo "=== context_switch.py ==="
 	$(GIL) context_switch.py
 	@echo "=== surprise.py ==="
 	$(GIL) surprise.py
 	@echo "=== no_surprise.py ==="
 	$(GIL) no_surprise.py
-	@echo "=== stats.py ==="
-	$(GIL) stats.py
+	@echo "=== stats_race.py ==="
+	$(GIL) stats_race.py
 	@echo "=== connection_pool.py ==="
 	$(GIL) connection_pool.py
 	@echo "=== refcount_race.py ==="
 	$(GIL) refcount_race.py
 
 nogil:
-	@echo "=== unsafe.py ==="
-	$(NOGIL) unsafe.py
-	@echo "=== safe.py ==="
-	$(NOGIL) safe.py
-	@echo "=== two_variable.py ==="
-	$(NOGIL) two_variable.py
+	@echo "=== counter_race.py ==="
+	$(NOGIL) counter_race.py
+	@echo "=== counter_lock.py ==="
+	$(NOGIL) counter_lock.py
+	@echo "=== two_counters.py ==="
+	$(NOGIL) two_counters.py
 	@echo "=== context_switch.py ==="
 	$(NOGIL) context_switch.py
 	@echo "=== surprise.py ==="
 	$(NOGIL) surprise.py
 	@echo "=== no_surprise.py ==="
 	$(NOGIL) no_surprise.py
-	@echo "=== stats.py ==="
-	$(NOGIL) stats.py
+	@echo "=== stats_race.py ==="
+	$(NOGIL) stats_race.py
 	@echo "=== connection_pool.py ==="
 	$(NOGIL) connection_pool.py
 	@echo "=== refcount_race.py ==="

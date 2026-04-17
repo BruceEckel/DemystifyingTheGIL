@@ -1,4 +1,4 @@
-# stats.py
+# stats_race.py
 """
 A stats accumulator whose two fields must stay in sync.
 
@@ -60,14 +60,14 @@ def report(label: str) -> None:
     total_ok = stats.total == EXPECTED
     ok = count_ok and total_ok
     if ok:
-        status = f"count={stats.count:,}"
+        status = f"count {stats.count:,}"
     else:
         parts = []
         if not count_ok:
             parts.append(f"count {stats.count:,}")
         if not total_ok:
             parts.append(f"total {stats.total:,.0f}")
-        status = f"{',  '.join(parts)}  expected {EXPECTED:,}"
+        status = f"{', '.join(parts)}  expected {EXPECTED:,}"
     show_status(label, status, ok)
 
 
