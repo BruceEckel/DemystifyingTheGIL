@@ -219,7 +219,7 @@
       <li>No synchronization — no locks, no atomics</li>
       <li>Expected result: <strong>800,000</strong></li>
     </ul>
-    <pre><span class="dim">$</span> python unsafe.py</pre>
+    <pre><span class="dim">$</span> python counter_race.py</pre>
     <div class="result-box result-good">
       Python 3.14 &nbsp;(GIL active)<br>
       Expected: <span class="green">800,000</span><br>
@@ -231,7 +231,7 @@
   <!-- ═══ SLIDE 4: Demo without GIL ═══ -->
   <div class="slide">
     <h2>Live Demo: Without GIL</h2>
-    <pre><span class="dim">$</span> uv run --python 3.14t unsafe.py</pre>
+    <pre><span class="dim">$</span> uv run --python 3.14t counter_race.py</pre>
     <ul>
       <li>Same source file. Same machine. Different Python build.</li>
     </ul>
@@ -501,12 +501,12 @@ _registry = {}
     </div>
     <div class="resource">
       <div class="resource-text">
-        <strong>This repo</strong> — <code>unsafe.py</code>, <code>safe.py</code>, <code>refcount_race.py</code>
+        <strong>This repo</strong> — <code>counter_race.py</code>, <code>counter_lock.py</code>, <code>refcount_race.py</code>
       </div>
     </div>
-    <pre style="margin-top:1rem;"><span class="dim">$</span> python unsafe.py                  <span class="cm"># GIL: always 800,000</span>
-<span class="dim">$</span> uv run --python 3.14t unsafe.py   <span class="cm"># no GIL: broken</span>
-<span class="dim">$</span> uv run --python 3.14t safe.py     <span class="cm"># no GIL: fixed</span></pre>
+    <pre style="margin-top:1rem;"><span class="dim">$</span> python counter_race.py                   <span class="cm"># GIL: always 800,000</span>
+<span class="dim">$</span> uv run --python 3.14t counter_race.py   <span class="cm"># no GIL: broken</span>
+<span class="dim">$</span> uv run --python 3.14t counter_lock.py   <span class="cm"># no GIL: fixed</span></pre>
   </div>
 
 </div><!-- /deck -->

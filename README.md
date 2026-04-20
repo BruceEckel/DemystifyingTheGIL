@@ -23,8 +23,6 @@ No GIL:
     uv run --python 3.14t the_example.py
 ```
 
-You can also change to the 
-
 ## Step 1: A function that looks completely safe
 
 Start with `surprise.py`. It defines a pure function with no shared state
@@ -55,9 +53,9 @@ Expected output:
 
 ```
 Python 3.14: Standard GIL
-  sequential      800,000   OK
-  threaded        800,000   OK
-  fast switch     241,037   WRONG  (lost 558,963)
+  sequential       800,000
+  threaded         800,000
+  fast switch      241,037  lost 558,963
 ```
 
 Sequential is always correct. Threaded with the normal switch interval is also
@@ -85,9 +83,9 @@ Expected output:
 
 ```
 Python 3.14t: No GIL
-  sequential      800,000   OK
-  threaded        302,815   WRONG  (lost 497,185)
-  fast switch     198,403   WRONG  (lost 601,597)
+  sequential       800,000
+  threaded         302,815  lost 497,185
+  fast switch      198,403  lost 601,597
 ```
 
 Sequential is still correct. But now both threaded rows are wrong, and neither
@@ -127,9 +125,9 @@ Expected output:
 
 ```
 Python 3.14: Standard GIL
-  sequential      800,000   OK
-  threaded        800,000   OK
-  fast switch     800,000   OK
+  sequential       800,000
+  threaded         800,000
+  fast switch      800,000
 ```
 
 All three rows are correct, including fast switch. The lock works.
@@ -144,9 +142,9 @@ Expected output:
 
 ```
 Python 3.14t: No GIL
-  sequential      800,000   OK
-  threaded        800,000   OK
-  fast switch     800,000   OK
+  sequential       800,000
+  threaded         800,000
+  fast switch      800,000
 ```
 
 Correct again. But notice that the free-threaded run is visibly slower than

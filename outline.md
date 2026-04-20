@@ -12,7 +12,7 @@
 - Expected result: **800,000**
 
 ```
-$ python unsafe.py
+$ python counter_race.py
 ```
 
 - Result: **800,000** ✓
@@ -23,7 +23,7 @@ $ python unsafe.py
 ## Demo Without GIL
 
 ```
-$ uv run --python 3.14t unsafe.py
+$ uv run --python 3.14t counter_race.py
 ```
 
 - Same code. Same machine. Different Python build.
@@ -35,9 +35,9 @@ $ uv run --python 3.14t unsafe.py
 ## What Is the GIL?
 
 - A *lock* (aka *mutex*) protects shared memory from simultaneous modification.
-- *Global* + *interpreter*: There's only one protecting the shared memory for the entire enterpreter
+- *Global* + *interpreter*: There's only one protecting the shared memory for the entire interpreter
 - Only one thread executes Python bytecode at a time
-- A CPython implementation detail; otherr implementations (Jython, PyPy-STM) don't have it
+- A CPython implementation detail; other implementations (Jython, PyPy-STM) don't have it
 - Since Python 1.5 (1997)
 
 ---
@@ -92,7 +92,7 @@ def increment(iterations):
             counter += 1
 ```
 
-- `safe.py`: correct on **both** Python 3.14 (GIL) and Python 3.14t (no GIL)
+- `counter_lock.py`: correct on **both** Python 3.14 (GIL) and Python 3.14t (no GIL)
 - The lock makes the intent explicit — don't rely on interpreter accidents
 
 ---
@@ -216,12 +216,12 @@ Why bother? Because without the GIL:
 - **PEP 703** — Making the Global Interpreter Lock Optional (Sam Gross)
 - **nogil project** — Sam Gross's original fork that became PEP 703
 - **python.org/downloads** — install Python 3.14t today
-- **This repo** — `unsafe.py`, `safe.py`, `refcount_race.py`
+- **This repo** — `counter_race.py`, `counter_lock.py`, `refcount_race.py`
 
 ```
-$ python unsafe.py              # GIL: always 800,000
-$ uv run --python 3.14t unsafe.py  # no GIL: broken
-$ uv run --python 3.14t safe.py    # no GIL: fixed
+$ python counter_race.py                    # GIL: always 800,000
+$ uv run --python 3.14t counter_race.py    # no GIL: broken
+$ uv run --python 3.14t counter_lock.py    # no GIL: fixed
 ```
 
 ---
