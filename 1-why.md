@@ -2,7 +2,7 @@
 
 Speed. Only start messing with this if things aren't running fast enough.
 
-The complexity jump is big: all of a sudden you must think about things that you've previously been able to ignore.
+The complexity jump is big: all of a sudden you must think about things you've previously been able to ignore.
 If your system is already fast enough, don't wade into this.
 
 If it's not fast enough, first consider simpler alternatives (use Occam's razor):
@@ -24,3 +24,82 @@ If it's not fast enough, first consider simpler alternatives (use Occam's razor)
 - **mmap + worker processes reading shared data**.
   For the large-dataset-in-memory problem: memory-map a file and let multiple processes read it without copying. The OS
   handles sharing at the page level.
+
+Any form of concurrency is not simple, and opens a Pandora's Box of issues you must understand intimately.
+
+## Workload Categories
+
+-  **CPU-bound, independent tasks (embarrassingly parallel)**.
+  No shared data between tasks. Each unit of work is self-contained. Examples: image resizing, password hashing,
+  compression, rendering frames. Best fit: multiprocessing, free-threaded threads, Rust extensions.
+
+-  **CPU-bound, shared large dataset**.
+  All workers need read access to the same large data structure simultaneously. Copying it per-process is impractical.
+  Examples: ML inference, search index queries, large matrix operations. Best fit: NumPy/GPU (vectorized, avoids the
+  problem), shared memory, or free-threaded threads (one copy in memory).
+
+-  **CPU-bound, shared mutable state**.
+  Workers both read and write common state. The hardest category. Examples: simulation with interacting agents, graph
+  algorithms. Best fit: careful free-threaded threading with fine-grained locks, or redesign to reduce sharing.
+
+-  **I/O-bound, many concurrent connections**.
+  Waiting dominates. The bottleneck is latency, not compute. Examples: web scraping, API clients, WebSocket servers,
+  database query fans. Best fit: async/await.
+
+-  **I/O-bound, blocking libraries**.
+  Same waiting problem but you can't go async because the library doesn't support it. Examples: legacy database drivers,
+   synchronous SDKs. Best fit: threading (GIL build is fine; no-GIL makes thread executors more powerful).
+
+-  **Pipeline / producer-consumer**.
+  Data flows through stages with different bottlenecks at each stage. One stage might be I/O-bound, the next CPU-bound.
+  Examples: ETL, media transcoding, event processing. Best fit: queues connecting threads or processes, or async with
+  executor offload for CPU stages.
+
+-  **Background / fire-and-forget**.
+  Work that must not block the main thread but doesn't need to return a result quickly. Examples: sending emails,
+  logging to a remote service, cache warming. Best fit: threading or async tasks; multiprocessing if isolation matters.
+
+-  **Latency-sensitive / event-driven**.
+  Must respond to external events within a deadline. Examples: trading systems, game servers, UI event loops. Best fit:
+  async/await (predictable yield points), or carefully tuned threading.
+
+-  **Distributed / beyond one machine**.
+  The problem is too large for one process or one machine. Examples: batch ML training, large-scale web crawling. Best
+  fit: Dask, Ray, Celery; the GIL is irrelevant at this level.
+
+  The GIL matters most for the first three categories. For everything I/O-bound, it was never really the bottleneck.
+
+## Concurrency Problems
+
+Broadly, concurrency problems fall into these categories:
+
+- **Race conditions**.
+  Two or more threads read and write shared state without coordination. The result depends on timing. This is the
+  primary focus of the presentation.
+
+- **Atomicity violations**.
+  A sequence of operations that must happen as a unit gets interrupted mid-way. stats_race.py is a good example: count
+  and total are updated on separate lines, so a thread can observe them in an inconsistent intermediate state.
+
+- **Order violations**.
+  Code assumes operations happen in a specific order across threads, but nothing enforces that order. Thread A assumes
+  Thread B has finished initialization before using the result; sometimes it has, sometimes it hasn't.
+
+- **Deadlock**.
+  Two threads each hold a lock the other needs. Both wait forever. Classic with two locks acquired in opposite order.
+
+- **Livelock**.
+  Threads keep responding to each other but make no progress. Neither is blocked, but neither advances. Less common in
+  Python but possible with complex retry logic.
+
+- **Starvation**.
+  One thread never gets scheduled or never acquires a lock because others keep taking priority. Can happen with unfair
+  lock implementations or heavy contention.
+
+- **Memory visibility**.
+  On hardware with weak memory models, one thread's writes may not be visible to another thread without a memory
+  barrier. Python largely hides this, but C extensions that bypass the object model can encounter it.
+
+- **Convoying**.
+  A slow thread holds a lock and forces all other threads to queue behind it, serializing what should be parallel work.
+  A subtle performance problem rather than a correctness problem.
