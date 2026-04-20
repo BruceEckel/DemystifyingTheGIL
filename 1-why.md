@@ -52,8 +52,19 @@ Any form of concurrency is not simple, and opens a Pandora's Box of issues you m
 
 -  **Pipeline / producer-consumer**.
   Data flows through stages with different bottlenecks at each stage. One stage might be I/O-bound, the next CPU-bound.
-  Examples: ETL, media transcoding, event processing. Best fit: queues connecting threads or processes, or async with
+  Examples: media transcoding, event processing. Best fit: queues connecting threads or processes, or async with
   executor offload for CPU stages.
+
+- Extract, Transform, Load (ETL). A data pipeline pattern:
+  - Extract: pull data from a source (database, API, files, streams)
+  - Transform: clean, reshape, or compute on it (filter rows, join tables, aggregate, normalize)
+  - Load: write the result to a destination (data warehouse, another database, files)
+
+  Classic example: nightly job that pulls sales records from a transactional database, calculates daily summaries, and
+  writes them to a reporting database.
+
+  It naturally fits the pipeline/producer-consumer category because each stage has a different bottleneck: Extract is
+  I/O-bound, Transform is often CPU-bound, Load is I/O-bound again.
 
 -  **Background / fire-and-forget**.
   Work that must not block the main thread but doesn't need to return a result quickly. Examples: sending emails,
@@ -67,15 +78,14 @@ Any form of concurrency is not simple, and opens a Pandora's Box of issues you m
   The problem is too large for one process or one machine. Examples: batch ML training, large-scale web crawling. Best
   fit: Dask, Ray, Celery; the GIL is irrelevant at this level.
 
-  The GIL matters most for the first three categories. For everything I/O-bound, it was never really the bottleneck.
+The GIL matters most for the first three categories. For everything I/O-bound, it was never really the bottleneck.
 
 ## Concurrency Problems
 
 Broadly, concurrency problems fall into these categories:
 
 - **Race conditions**.
-  Two or more threads read and write shared state without coordination. The result depends on timing. This is the
-  primary focus of the presentation.
+  Two or more threads read and write shared state without coordination. The result depends on timing.
 
 - **Atomicity violations**.
   A sequence of operations that must happen as a unit gets interrupted mid-way. stats_race.py is a good example: count
