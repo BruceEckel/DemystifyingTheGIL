@@ -85,9 +85,9 @@ Without the GIL, threads run in true parallel on multiple cores. CPU-bound work 
 | Race condition frequency | Rare | Continuous |
 | Single-threaded overhead | None | Small (atomic refcounting) |
 
-**Not appropriate for (GIL build):** CPU-bound work.
+**GIL build not appropriate for:** CPU-bound work.
 
-**Not appropriate for (no-GIL build):** Code with heavy shared-state contention (lock overhead can make it slower than the GIL build), or production systems relying on libraries not yet tested under free-threading.
+**No-GIL build not appropriate for:** Code with heavy shared-state contention (lock overhead can make it slower than the GIL build), or production systems relying on libraries not yet tested under free-threading.
 
 ---
 
@@ -109,7 +109,7 @@ Separate OS processes, each with its own Python interpreter and GIL. The OS prov
 
 **Use when:** You have CPU-bound work expressible as independent tasks, startup cost is acceptable, and data exchange between workers is infrequent.
 
-**Not appropriate for:** Fine-grained parallelism with frequent communication, or tasks where startup overhead dominates runtime.
+**Not appropriate for:** Fine-grained parallelism with frequent communication, tasks where startup overhead dominates runtime, or workloads with large datasets that must be in memory simultaneously. Each worker gets its own copy of the data, multiplying memory usage by the number of processes. Workarounds exist (`multiprocessing.shared_memory`, memory-mapped files) but add significant complexity.
 
 ```python
 from multiprocessing import Pool
