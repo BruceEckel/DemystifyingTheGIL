@@ -250,6 +250,93 @@ cost that you pay whether or not you have threads, and making refcounts
 thread-safe with traditional techniques *always* makes that cost visibly
 higher. As long as that was true, the challenge couldn't be met.
 
+## 2014: asyncio and async/await
+
+The original 1992 motivation for threads was I/O concurrency. Python 3.4
+(2014) introduced the `asyncio` module, and Python 3.5 (2015) added the
+`async` and `await` keywords. Together they provide an event-loop-based
+alternative to threads for the exact workload threads were added to handle:
+programs that spend most of their time waiting on I/O.
+
+### What asyncio solves
+
+An `async def` function is a coroutine. A single thread runs the event loop
+and drives thousands of these coroutines. When one suspends on `await`, the
+loop picks up another coroutine that is ready to run. No OS threads are
+created; no refcount races are possible; no GIL is ever contended, because
+there is only ever one thread running Python code.
+
+For the original 1992 use cases this is often a better fit than threads:
+
+- **Network servers.** A single-threaded event loop handles tens of
+  thousands of concurrent connections at a fraction of the memory cost of
+  one OS thread per connection.
+- **Clients making many parallel requests.** `asyncio.gather` runs
+  hundreds of HTTP calls concurrently with no synchronization code.
+- **Responsive applications.** Long-running work expressed as coroutines
+  yields to the loop at each `await`, keeping the program responsive.
+
+Because all coroutines run on one thread, none of the problems this project
+demonstrates exist in `asyncio` code. There is no shared-state race, because
+there is no concurrent execution of Python code: context switches happen
+only at explicit `await` points, which makes the interleavings visible in
+the source.
+
+### What asyncio does not solve
+
+- **CPU-bound work.** A coroutine that computes without awaiting starves
+  every other coroutine on the loop. A long regex, a large JSON parse, a
+  numeric loop without a release point: all of these freeze the loop. CPU
+  parallelism still requires threads (on the free-threaded build) or
+  processes (`multiprocessing`, `ProcessPoolExecutor`).
+- **Blocking libraries.** `asyncio` only helps if every I/O call goes
+  through an async-aware API. A single `requests.get()`, `psycopg2` query,
+  or `time.sleep()` blocks the loop and kills concurrency for every other
+  task. The standard workaround is `loop.run_in_executor()`, which runs
+  the blocking call on a background thread pool. That puts threads back in
+  the picture.
+- **Function coloring.** `async` functions can only be awaited from other
+  `async` functions. Introducing async into an existing synchronous
+  codebase is not a local refactor; it propagates up every call site.
+  Large conversions are effectively rewrites.
+- **C extension behavior.** Async changes when Python schedules work, not
+  what C extensions do. A C extension that blocks on a syscall without
+  releasing the GIL still blocks the event loop.
+
+### How asyncio affects the GIL story
+
+`asyncio` retroactively weakens the 1992 argument for threads. If
+async/await had existed in 1992, Guido might have chosen a single-threaded
+event-loop model (roughly what JavaScript later did) and skipped decision
+(3) entirely. No threads, no refcount races, no GIL.
+
+But `asyncio` arrived 22 years after threads did. By 2014:
+
+- Threading was established in the language and in production code.
+- The CPython C extension ecosystem had been built on the assumption that
+  threads exist and the GIL serializes them.
+- Users who needed CPU parallelism (numeric computing, machine learning)
+  still needed something threads or processes could provide and coroutines
+  could not.
+
+So `asyncio` does not remove the need for threads; it removes the need for
+*some common uses* of threads. The case of "many concurrent I/O operations
+in one process" is now often better served by coroutines, and modern
+Python code increasingly uses `asyncio` for that workload. Threads remain
+necessary for:
+
+- CPU-bound parallelism on the free-threaded build.
+- Integrating with blocking libraries that have no async equivalent.
+- GUI frameworks with their own event loops that need worker threads for
+  background work.
+- Embedding scenarios where a host C program calls into Python from
+  multiple threads.
+
+The four-decision chain still holds. `asyncio` provides an alternative
+concurrency model for one workload, not a replacement for threads in
+general, so the GIL (or the PEP 703 machinery that replaces it) is still
+required.
+
 ## 2023: PEP 703
 
 Sam Gross's PEP 703, accepted in October 2023, is the first approach that
