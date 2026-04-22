@@ -1,9 +1,9 @@
 # The History of the GIL
 
-The GIL might look like a design mistake: a lock that prevents
-Python from exploiting multi-core hardware.
-However, it is the natural consequence of four architectural decisions, each of which
-was correct in isolation and each of which reinforced the others.
+The GIL might look like a design mistake: a lock that prevents Python
+from exploiting multi-core hardware. However, it is the natural
+consequence of four architectural decisions, each of which was correct in
+isolation and each of which reinforced the others.
 
 This document traces that evolution. The claim is not that the GIL was optimal,
 but that, given the path Python actually took, it was the only realistic
@@ -36,10 +36,10 @@ This was a good choice in 1990:
 
 - **Simple to implement.** A small number of macros (`Py_INCREF`, `Py_DECREF`)
   and no separate collector thread.
-- **Deterministic destruction.** Files close when their last reference drops.
-  Locks release. Sockets shut down. No "wait for the garbage collector to get around to it." This
-  matters for a language designed to glue C libraries together, where those
-  libraries hold OS resources.
+- **Deterministic destruction.** Files close when their last reference
+  drops. Locks release. Sockets shut down. No "wait for the garbage
+  collector to get around to it." This matters for a language designed to
+  glue C libraries together, where those libraries hold OS resources.
 - **No world-stop pauses.** Tracing garbage collectors of the era stopped every
   thread to scan the heap. Refcounting spreads the cost across every operation
   and never pauses.
@@ -131,7 +131,8 @@ With threads added, all three ingredients are now present:
 - **An extension ecosystem manipulating those refcounts directly** (from 1991).
 - **Threads that share memory** (from 1992).
 
-Real programs can now have races during object reference counts.Synchronization is *required*.
+Real programs can now have races during object reference counts.
+Synchronization is *required*.
 
 ## The Synchronization Choice
 
@@ -178,11 +179,11 @@ to be rewritten. The deterministic-destruction guarantees that make
 `with open(...) as f:` work would have to be replaced with some less
 predictable mechanism.
 
-Jython (on the Java Virtual Machine, JVM) and IronPython (on .NET) actually did this: they run
-Python on tracing GCs and correspondingly have no GIL. Neither achieved
-anywhere near CPython's adoption, and the reason is exactly the extension
-story: they can't host NumPy or any other CPython C extension without
-emulation.
+Jython (on the Java Virtual Machine, or JVM) and IronPython (on .NET)
+actually did this: they run Python on tracing GCs and correspondingly have
+no GIL. Neither achieved anywhere near CPython's adoption, and the reason
+is exactly the extension story: they can't host NumPy or any other CPython
+C extension without emulation.
 
 ### Remove threads
 
@@ -463,59 +464,82 @@ to be thread-safe by default.
 
 ## Appendix: In an Extension, What Gets Refcounted?
 
-Any PyObject* the extension touches. The entire Python object model in C is PyObject*, and every Python value (ints,
-strings, lists, dicts, user-defined instances, function objects, modules, types, everything) has ob_refcnt as the
-first field of its C struct, exposed via the PyObject_HEAD macro.
+Any `PyObject*` the extension touches. The entire Python object model in C
+is `PyObject*`, and every Python value (ints, strings, lists, dicts,
+user-defined instances, function objects, modules, types, everything) has
+`ob_refcnt` as the first field of its C struct, exposed via the
+`PyObject_HEAD` macro.
 
 Concretely, the refcount manipulation happens on:
 
-- Arguments coming in. A C function receives its args as PyObject*. Whether it needs to INCREF them depends on
-"borrowed vs. owned" semantics it has to track.
-- Return values going out. PyLong_FromLong(42) returns a new reference (refcount 1). The caller owns it; whoever
-eventually receives it must DECREF when done.
-- Items fetched from containers. PyDict_GetItem returns a borrowed reference; if the extension wants to hold onto it
-past the dict's lifetime, it must INCREF. PyList_GetItem same. PyList_SetItem steals a reference to the value being
-inserted, so the caller must not DECREF after.
-- Cached or stored objects. Anything the extension stashes in a C static variable, a struct field, or its module state
-  needs an INCREF to keep it alive, and a matching DECREF at teardown.
-- Intermediate objects. Temporaries created during the function body (e.g., a list being built up to return) need
-their refcounts balanced before exit.
+- **Arguments coming in.** A C function receives its args as `PyObject*`.
+  Whether it needs to `Py_INCREF` them depends on "borrowed vs. owned"
+  semantics it has to track.
+- **Return values going out.** `PyLong_FromLong(42)` returns a *new
+  reference* (refcount 1). The caller owns it; whoever eventually receives
+  it must `Py_DECREF` when done.
+- **Items fetched from containers.** `PyDict_GetItem` returns a *borrowed*
+  reference; if the extension wants to hold onto it past the dict's
+  lifetime, it must `Py_INCREF`. `PyList_GetItem` is the same.
+  `PyList_SetItem` *steals* a reference to the value being inserted, so
+  the caller must not `Py_DECREF` after.
+- **Cached or stored objects.** Anything the extension stashes in a C
+  static variable, a struct field, or its module state needs a
+  `Py_INCREF` to keep it alive, and a matching `Py_DECREF` at teardown.
+- **Intermediate objects.** Temporaries created during the function body
+  (e.g., a list being built up to return) need their refcounts balanced
+  before exit.
 
-It's important to note that Py_INCREF is a C macro, not a function. It expands inline to ((PyObject*)(op))->ob_refcnt++. So every
-compiled extension has ob_refcnt++ written directly into its machine code against the current struct layout. That's
-why this is an ABI issue rather than just an API issue: CPython can't change how refcounting works (atomicize it, add
-a bias field, make it deferred) without every already-compiled .so/.pyd on users' machines executing the wrong machine
-  instruction against the new layout.
+`Py_INCREF` is a C macro, not a function. It expands inline to
+`((PyObject*)(op))->ob_refcnt++`. Every compiled extension has
+`ob_refcnt++` written directly into its machine code against the current
+struct layout. That's why this is an ABI issue rather than just an API
+issue: CPython can't change how refcounting works (atomicize it, add a
+bias field, make it deferred) without every already-compiled `.so` or
+`.pyd` on users' machines executing the wrong machine instruction against
+the new layout.
 
-There is no stack allocation for Python objects. Every PyObject lives on the heap, and refcounting is the only
-  mechanism that ever frees it. If an extension creates a temporary and doesn't DECREF it before returning, it leaks,
-  even if no Python code or C code outside that function ever saw it.
+There is no stack allocation for Python objects. Every `PyObject` lives on
+the heap, and refcounting is the only mechanism that ever frees it. If an
+extension creates a temporary and doesn't `Py_DECREF` it before returning,
+it leaks, even if no Python code or C code outside that function ever saw
+it.
 
-  Concrete example:
+Concrete example:
 
-  static PyObject* add_them(PyObject *self, PyObject *args) {
-      PyObject *x = PyLong_FromLong(10);   // new reference, refcount = 1
-      PyObject *y = PyLong_FromLong(20);   // new reference, refcount = 1
-      PyObject *sum = PyNumber_Add(x, y);  // new reference, refcount = 1
-      Py_DECREF(x);                        // refcount -> 0, freed immediately
-      Py_DECREF(y);                        // refcount -> 0, freed immediately
-      return sum;                          // ownership transferred to caller
-  }
+```c
+static PyObject* add_them(PyObject *self, PyObject *args) {
+    PyObject *x = PyLong_FromLong(10);   // new reference, refcount = 1
+    PyObject *y = PyLong_FromLong(20);   // new reference, refcount = 1
+    PyObject *sum = PyNumber_Add(x, y);  // new reference, refcount = 1
+    Py_DECREF(x);                        // refcount -> 0, freed immediately
+    Py_DECREF(y);                        // refcount -> 0, freed immediately
+    return sum;                          // ownership transferred to caller
+}
+```
 
-  x and y never leave the function. They still need explicit Py_DECREF calls, or they leak. The Python integers 10 and
-  20 are heap objects; there's no "local variable" lifetime managing them.
+`x` and `y` never leave the function. They still need explicit `Py_DECREF`
+calls, or they leak. The Python integers `10` and `20` are heap objects;
+there's no "local variable" lifetime managing them.
 
- Note:
+Note:
 
-  1. Borrowed vs. new references. Objects you receive (function arguments, results of PyDict_GetItem, PyList_GetItem)
-  are usually borrowed: you do not DECREF them. Objects you create (anything with From, New, or Py_BuildValue in its
-  name) are new references: you must DECREF eventually, or transfer ownership. This distinction isn't visible in the C
-  type system; it's documented per-function and the extension author has to track it mentally.
-  2. Immortal objects in 3.12+ (PEP 683). None, True, False, small integers, and interned strings now carry a sentinel
-  refcount that never changes. Py_INCREF(Py_None) is a no-op at runtime. But the extension author still writes the macro
-   in source, and still reasons as if it were a normal refcount, because the macro is the contract and the optimization
-  is invisible below it.
+1. **Borrowed vs. new references.** Objects you *receive* (function
+   arguments, results of `PyDict_GetItem`, `PyList_GetItem`) are usually
+   borrowed: you do *not* `Py_DECREF` them. Objects you *create* (anything
+   with `From`, `New`, or `Py_BuildValue` in its name) are new references:
+   you *must* `Py_DECREF` eventually, or transfer ownership. This
+   distinction isn't visible in the C type system; it's documented
+   per-function and the extension author has to track it mentally.
+2. **Immortal objects in 3.12+** (PEP 683). `None`, `True`, `False`, small
+   integers, and interned strings now carry a sentinel refcount that never
+   changes. `Py_INCREF(Py_None)` is a no-op at runtime. But the extension
+   author still writes the macro in source, and still reasons as if it
+   were a normal refcount, because the macro is the contract and the
+   optimization is invisible below it.
 
-  The net effect: the C extension author is essentially hand-rolling garbage collection, one INCREF/DECREF pair at a
-  time, for every PyObject* that passes through their code. This is the cost side of decision (2) in the document, and
-  it's what makes the ecosystem so sensitive to any change in how refcounts work.
+The net effect: the C extension author is essentially hand-rolling garbage
+collection, one `Py_INCREF`/`Py_DECREF` pair at a time, for every
+`PyObject*` that passes through their code. This is the cost side of
+decision (2) in the document, and it's what makes the ecosystem so
+sensitive to any change in how refcounts work.
