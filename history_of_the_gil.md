@@ -12,8 +12,9 @@ outcome at the point it was needed.
 ## The Four Decisions
 
 1. **Reference counting** as the memory management (garbage collection) strategy.
-2. **A direct C extension API** that exposes refcount manipulation to extension
-   authors, turning Python into a "coordination language" for C libraries.
+2. **A direct C extension API** (Application Programming Interface) that
+   exposes refcount manipulation to extension authors, turning Python into a
+   "coordination language" for C libraries.
 3. **OS-level threads**, added for I/O concurrency.
 4. **A single interpreter-wide lock** as the cheapest sufficient way to make
    (1), (2), and (3) coexist.
@@ -81,10 +82,12 @@ writing extensions was easy.
 
 The cost: **the reference count is now part of the public ABI.**
 
-Where an Application Programming Interface (API) is a contract at the source-code level (function names, signatures, types that a compiler checks), an Application Binary Interface (ABI)
-is the contract at the compiled-binary level: struct layouts, field offsets, calling conventions, symbol names, which
-things are inlined vs. called through a function. Two libraries are ABI-compatible if a binary compiled against one
-version still runs against another without recompiling.
+Where an API is a contract at the source-code level (function names,
+signatures, types that a compiler checks), an Application Binary Interface
+(ABI) is the contract at the compiled-binary level: struct layouts, field
+offsets, calling conventions, symbol names, which things are inlined vs.
+called through a function. Two libraries are ABI-compatible if a binary
+compiled against one version still runs against another without recompiling.
 
 Reference counting is part of the ABI: extension authors *manipulate refcounts
 directly*. Every extension written between 1991 and today contains code that
@@ -175,7 +178,7 @@ to be rewritten. The deterministic-destruction guarantees that make
 `with open(...) as f:` work would have to be replaced with some less
 predictable mechanism.
 
-Jython (on the JVM) and IronPython (on .NET) actually did this: they run
+Jython (on the Java Virtual Machine, JVM) and IronPython (on .NET) actually did this: they run
 Python on tracing GCs and correspondingly have no GIL. Neither achieved
 anywhere near CPython's adoption, and the reason is exactly the extension
 story: they can't host NumPy or any other CPython C extension without
@@ -231,9 +234,10 @@ skipped one of the decisions:
 - **Erlang** skipped a more fundamental premise: no shared mutable state
   between processes at all. A coherent design, but not one you can retrofit
   onto a language that already has shared objects.
-- **Jython and IronPython** are Python with decision (1) replaced: they run on
-  the JVM and CLR with tracing GC. They have no GIL. They also cannot host
-  CPython's C extension ecosystem, which is why most users stayed on CPython.
+- **Jython and IronPython** are Python with decision (1) replaced: they run
+  on the JVM and the Common Language Runtime (CLR) with tracing GC. They
+  have no GIL. They also cannot host CPython's C extension ecosystem, which
+  is why most users stayed on CPython.
 - **Ruby (MRI)** made all four of the same decisions as CPython and got the
   same result: a Global VM Lock. JRuby and TruffleRuby, running on different
   VMs, have no GVL, the same pattern as Jython and IronPython.
@@ -395,8 +399,8 @@ to traditional threading.
 Compared to `multiprocessing`:
 
 - **Cheaper startup**, with no new process and no re-import.
-- **Lower IPC overhead.** Channels can pass a limited set of types without
-  pickling.
+- **Lower inter-process communication (IPC) overhead.** Channels can pass a
+  limited set of types without pickling.
 - **Same address space**, leaving room for zero-copy sharing of immutable
   data.
 

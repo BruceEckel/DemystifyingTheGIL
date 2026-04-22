@@ -11,8 +11,6 @@
 | `ThreadPoolExecutor` | No → **Yes** | Yes | `run_in_executor` and thread pools gain true CPU parallelism |
 | `ProcessPoolExecutor` | Yes | Yes | None: already process-isolated |
 
----
-
 ## `async`/`await`
 
 Cooperative, single-threaded concurrency. A coroutine runs until it hits an `await`, then yields control to the event loop, which runs another coroutine. No thread is ever switched preemptively.
@@ -55,8 +53,6 @@ result = await loop.run_in_executor(None, blocking_library_call, arg)
 
 With the GIL, this works well for I/O-bound blocking calls (the thread releases the GIL during I/O), but for CPU-bound blocking calls the executor thread holds the GIL and stalls the event loop anyway. Without the GIL, the executor thread runs truly in parallel with the event loop for both I/O and CPU-bound work. The need for async-aware libraries remains, but the cost of not having them is reduced.
 
----
-
 ## Threading
 
 Preemptive multitasking using OS threads. The OS schedules threads normally. The `threading` module API is identical in both builds; the GIL determines whether threads run in parallel or take turns.
@@ -88,8 +84,6 @@ Without the GIL, threads run in true parallel on multiple cores. CPU-bound work 
 **GIL build not appropriate for:** CPU-bound work.
 
 **No-GIL build not appropriate for:** Code with heavy shared-state contention (lock overhead can make it slower than the GIL build), or production systems relying on libraries not yet tested under free-threading.
-
----
 
 ## `multiprocessing`
 
@@ -127,8 +121,6 @@ with Pool() as pool:
 
 What changes is the relative appeal. With the GIL, `multiprocessing` is often the only practical way to achieve CPU parallelism in Python, so its overhead is accepted as a necessary cost. Without the GIL, free-threaded `threading` can achieve similar parallelism with no process creation cost and no serialization overhead. For workloads where isolation is not the primary goal, `multiprocessing` becomes less compelling as free-threading matures.
 
----
-
 ## Subinterpreters
 
 Multiple Python interpreters running in the same OS process, each with its own GIL. Added at the C API level in Python 3.12 (PEP 554); higher-level Python APIs are still evolving (PEP 734).
@@ -151,8 +143,6 @@ Multiple Python interpreters running in the same OS process, each with its own G
 Subinterpreters were designed specifically to provide CPU parallelism within a single process while keeping the GIL. Each interpreter has its own GIL, so they run simultaneously without interfering with each other.
 
 Without the GIL, the per-interpreter GIL disappears alongside the main one. Subinterpreters still provide isolation (separate module namespaces, type objects, and memory allocator state), but the parallelism they offer is no longer distinct from what plain threads provide. In the free-threaded build, subinterpreters become a tool for isolation rather than a tool for parallelism. Their practical advantages over threads shrink considerably.
-
----
 
 ## `concurrent.futures`
 
@@ -187,8 +177,6 @@ with ProcessPoolExecutor() as ex:
 | `ThreadPoolExecutor` | I/O parallel only | I/O and CPU parallel |
 | `ProcessPoolExecutor` | I/O and CPU parallel | I/O and CPU parallel (unchanged) |
 
----
-
 ## Decision Guide
 
 ```
@@ -210,8 +198,6 @@ Is your bottleneck CPU?
 Tasks share data heavily?
 └── Contention limits gains regardless of strategy; reconsider the design
 ```
-
----
 
 ## What the GIL Was Actually Solving
 

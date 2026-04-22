@@ -17,8 +17,6 @@ The outline says "check your dependencies" but gives no specifics. The audience 
 **What tools can find these bugs beyond running under 3.14t?**
 The outline recommends running the test suite under 3.14t, which is good advice. Are there other tools? Thread sanitizer (`-fsanitize=thread` for C extensions), `threading.settrace` tricks, or stress-test harnesses? Even a brief mention signals to the audience that the ecosystem is developing.
 
----
-
 ## Narrative
 
 **Is there a clear villain and resolution?**
@@ -26,8 +24,6 @@ The current arc is: GIL hides races → no-GIL exposes them → add locks. That 
 
 **Does the audience leave with one sentence?**
 A strong talk can be summarized in one sentence by the audience on the way out. The current closest candidate is the slide: "If two threads touch the same data and at least one writes, you need a lock (GIL or not)." Is that the sentence? Knowing it explicitly helps decide which examples to keep and which to cut.
-
----
 
 ## Housekeeping
 

@@ -4,8 +4,6 @@
 - Race conditions, free-threaded Python, and why your threads lied to you
 - PyCon 2026
 
----
-
 ## Demo With GIL
 
 - 8 threads, each incrementing a shared counter 100,000 times
@@ -18,8 +16,6 @@ $ python counter_race.py
 - Result: **800,000** ✓
 - The claim holds... or does it?
 
----
-
 ## Demo Without GIL
 
 ```
@@ -30,17 +26,13 @@ $ uv run --python 3.14t counter_race.py
 - Result: NOT **800,000** ✗ (varies every run)
 - The race condition was always there — the GIL was hiding it
 
----
-
 ## What Is the GIL?
 
 - A *lock* (aka *mutex*) protects shared memory from simultaneous modification.
 - *Global* + *interpreter*: There's only one protecting the shared memory for the entire interpreter
 - Only one thread executes Python bytecode at a time
-- A CPython implementation detail; other implementations (Jython, PyPy-STM) don't have it
+- A CPython implementation detail; other implementations (Jython, PyPy-STM, which uses Software Transactional Memory) don't have it
 - Since Python 1.5 (1997)
-
----
 
 ## What Shared Memory is Protected?
 
@@ -54,8 +46,6 @@ $ uv run --python 3.14t counter_race.py
 - **`sys.settrace` / profiling** — frame inspection assumes serialized execution
 - **Accidental thread safety** — your code, not written for concurrency, works anyway
 
----
-
 ## `counter += 1` Is Not Atomic
 
 ```
@@ -68,8 +58,6 @@ STORE_GLOBAL  counter       # write result back
 - Two threads read the same value → both increment → one write is lost
 - The classic **read-modify-write** race condition
 
----
-
 ## Why It "Works" With the GIL
 
 - The GIL is released only at predictable points — every N bytecodes (the "check interval")
@@ -77,8 +65,6 @@ STORE_GLOBAL  counter       # write result back
 - But this is **not guaranteed** — it's timing luck
 - Even with the GIL, long enough critical sections *can* be interrupted
 - You've been getting away with it, not writing correct code
-
----
 
 ## The Fix: Explicit Locking
 
@@ -94,8 +80,6 @@ def increment(iterations):
 
 - `counter_lock.py`: correct on **both** Python 3.14 (GIL) and Python 3.14t (no GIL)
 - The lock makes the intent explicit — don't rely on interpreter accidents
-
----
 
 ## Python 3.14t — Free-Threaded Build
 
@@ -116,12 +100,8 @@ uv python install 3.14t
 uv run --python 3.14t script.py
 ```
 
----
-
 ## Act 3: The Coming Surprise
 <!-- ~10 min -->
-
----
 
 ## The Iceberg
 
@@ -130,8 +110,6 @@ uv run --python 3.14t script.py
 - Every library you import was written under the GIL assumption
 - Most library authors didn't know they needed to think about thread safety
 - The GIL was their lock — silently, invisibly, without their knowledge
-
----
 
 ## Library Patterns That Will Break
 
@@ -143,8 +121,6 @@ Code that is "accidentally thread-safe" today:
 - **Connection pools** — checkout/checkin logic that assumes serialized access
 - **Logging handlers** — writing to shared buffers or files
 - **C extensions** — any extension that touches Python objects without the GIL held
-
----
 
 ## A Concrete Example
 
@@ -166,8 +142,6 @@ Under 3.14t with concurrent `register()` calls:
 - Or one thread iterates while another inserts → `RuntimeError: dictionary changed size`
 - **The code didn't change. The behavior did.**
 
----
-
 ## Why This Is Hard to Find
 
 - Race conditions are **non-deterministic** — the bug may appear 1 in 10,000 runs
@@ -176,8 +150,6 @@ Under 3.14t with concurrent `register()` calls:
 - Python 3.14t makes races *more likely* but still not certain
 - Luckily: 3.14t is a correctness checker you can run today
 
----
-
 ## What You Should Do Now
 
 1. **Audit shared mutable state** — anything touched by more than one thread
@@ -185,8 +157,6 @@ Under 3.14t with concurrent `register()` calls:
 3. **Add explicit locks** — `threading.Lock`, `threading.RLock`, `queue.Queue`
 4. **Prefer immutable data** — objects created once and never mutated are safe
 5. **Check your dependencies** — file issues against libraries that don't declare thread safety
-
----
 
 ## The Payoff
 
@@ -198,8 +168,6 @@ Why bother? Because without the GIL:
 - The ecosystem has 30 years of battle-tested concurrency primitives to use
 - Libraries that do the work correctly will be faster and more scalable
 
----
-
 ## The Rule
 
 > If two threads touch the same data and at least one of them writes,
@@ -208,8 +176,6 @@ Why bother? Because without the GIL:
 - This has always been true
 - The GIL made it optional in CPython — that era is ending
 - Code that follows this rule works correctly on every Python implementation, today and tomorrow
-
----
 
 ## Resources & Q&A
 
@@ -223,6 +189,4 @@ $ python counter_race.py                    # GIL: always 800,000
 $ uv run --python 3.14t counter_race.py    # no GIL: broken
 $ uv run --python 3.14t counter_lock.py    # no GIL: fixed
 ```
-
----
 *18 slides · ~30 minutes · 1.5–2 min/slide*
