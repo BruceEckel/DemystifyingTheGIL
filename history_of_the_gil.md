@@ -31,7 +31,7 @@ Every object carries an `ob_refcnt` field. When something starts pointing at the
 object, the count goes up. When something stops, the count goes down. When it
 reaches zero, the object is freed immediately.
 
-Reasons this was a good choice in 1990:
+This was a good choice in 1990:
 
 - **Simple to implement.** A small number of macros (`Py_INCREF`, `Py_DECREF`)
   and no separate collector thread.
@@ -59,8 +59,9 @@ obj->ob_refcnt = old+1 // STORE
 This is fine on a single thread. With two threads, updates can be lost. A lost
 `Py_INCREF` leaves the refcount too low and the object gets freed while still in
 use. A lost `Py_DECREF` leaks it. The first is a memory safety bug; the second
-is a resource leak. And refcount operations happen millions of times per second
-in normal execution, so any fix must be essentially free on the common path.
+is a resource leak. Refcount operations also happen millions of times per
+second in normal execution, so any fix must be essentially free on the
+common path.
 
 Nothing about this mattered in 1990, because Python had no threads. But the
 decision was now baked in. The rest of the story is shaped by it.
@@ -134,8 +135,8 @@ slower than they are today.
 More fundamentally: atomics on refcounts protect refcounts, but they don't
 protect dict internals, the import system, the bytecode interpreter's own
 bookkeeping, the module loader, the type system. You still need locks on all
-of that. And you've already slowed down every single-threaded Python program
-for the benefit of the multi-threaded case.
+of that. Meanwhile, you've already slowed down every single-threaded
+Python program for the benefit of the multi-threaded case.
 
 ### Fine-grained per-object locking
 
@@ -180,8 +181,8 @@ share memory.
 
 Python could have done this in 1992, but users who wanted threads for I/O
 already had them. Taking them away would have broken code that already worked.
-And Python's embedding story (CPython runs *inside* C programs that might
-already be multithreaded) made "no threads" a non-starter.
+Python's embedding story (CPython runs *inside* C programs that might
+already be multithreaded) also made "no threads" a non-starter.
 
 ### Single interpreter-wide lock
 
@@ -216,8 +217,8 @@ skipped one of the decisions:
   later, but they're message-passing only.
 - **Java and C#** skipped decision (1). Tracing GC from day one. They also
   skipped the leaky-extension-API problem via JNI and P/Invoke, which hide the
-  GC. And they had decision (3) designed in from the start, with language-level
-  synchronization primitives and a specified memory model.
+  GC. They also had decision (3) designed in from the start, with
+  language-level synchronization primitives and a specified memory model.
 - **Erlang** skipped a more fundamental premise: no shared mutable state
   between processes at all. A coherent design, but not one you can retrofit
   onto a language that already has shared objects.
@@ -429,8 +430,8 @@ directly, using techniques that didn't exist (or weren't mature enough) in the
 
 This is the free-threaded build (`3.13t`, `3.14t`) that the rest of this
 project demonstrates. It meets the single-threaded performance bar. It is
-still opt-in. And it changes the contract that extension authors have relied
-on for three decades.
+still opt-in. It also changes the contract that extension authors have
+relied on for three decades.
 
 ## Summary
 
