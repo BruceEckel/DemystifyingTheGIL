@@ -175,8 +175,8 @@ what Java, C#, and JavaScript did.
 
 But this undoes **1990 and 1991 simultaneously**. Every extension that
 manipulates `ob_refcnt` breaks. The entire scientific Python stack would have
-to be rewritten. The deterministic-destruction guarantees that make
-`with open(...) as f:` work would have to be replaced with some less
+to be rewritten. The guaranteed deterministic destruction that enables
+`with open(...) as f:` would have to be replaced with some less
 predictable mechanism.
 
 Jython (on the Java Virtual Machine, or JVM) and IronPython (on .NET)
