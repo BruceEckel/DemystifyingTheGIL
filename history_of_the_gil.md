@@ -106,7 +106,11 @@ The motivation was **I/O concurrency**, not multi-core performance:
   slow read.
 - GUIs wanted to keep the interface responsive while work ran in the
   background.
-- Event loops as we now know them didn't exist yet in mainstream languages.
+- Event loops existed (GUI toolkits like X11 and Tcl/Tk ran them, as did
+  servers built directly on `select()`), but programming against them
+  required manual state machines or callback chains. The ergonomic syntax
+  came much later: generators in 2001, `yield from` in 2008, `async` and
+  `await` in 2015.
 
 A thread that blocks on a syscall doesn't need CPU; having another thread ready
 to use the CPU while it waits is the entire point. This use case doesn't need
