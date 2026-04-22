@@ -55,7 +55,7 @@ Any form of concurrency is not simple, and opens a Pandora's Box of issues you m
   Examples: media transcoding, event processing. Best fit: queues connecting threads or processes, or async with
   executor offload for CPU stages.
 
-- Extract, Transform, Load (ETL). A data pipeline pattern:
+- **Extract, Transform, Load (ETL)**. A data pipeline pattern:
   - Extract: pull data from a source (database, API, files, streams)
   - Transform: clean, reshape, or compute on it (filter rows, join tables, aggregate, normalize)
   - Load: write the result to a destination (data warehouse, another database, files)
@@ -78,7 +78,7 @@ Any form of concurrency is not simple, and opens a Pandora's Box of issues you m
   The problem is too large for one process or one machine. Examples: batch ML training, large-scale web crawling. Best
   fit: Dask, Ray, Celery; the GIL is irrelevant at this level.
 
-The GIL matters most for the first three categories. For everything I/O-bound, it was never really the bottleneck.
+The GIL matters most for the first three categories. For everything I/O-bound, it is not the bottleneck.
 
 ## Concurrency Problems
 
