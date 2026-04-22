@@ -11,7 +11,7 @@ outcome at the point it was needed.
 
 ## The Four Decisions
 
-1. **Reference counting** as the memory management (garbage collection) strategy.
+1. **Reference counting** as the memory management (garbage collection, GC) strategy.
 2. **A direct C extension API** (Application Programming Interface) that
    exposes refcount manipulation to extension authors, turning Python into a
    "coordination language" for C libraries.
@@ -37,7 +37,7 @@ This was a good choice in 1990:
 - **Simple to implement.** A small number of macros (`Py_INCREF`, `Py_DECREF`)
   and no separate collector thread.
 - **Deterministic destruction.** Files close when their last reference drops.
-  Locks release. Sockets shut down. No "wait for the garbage collector (GC) to get around to it." This
+  Locks release. Sockets shut down. No "wait for the garbage collector to get around to it." This
   matters for a language designed to glue C libraries together, where those
   libraries hold OS resources.
 - **No world-stop pauses.** Tracing garbage collectors of the era stopped every
@@ -76,7 +76,7 @@ macros.
 
 This was a deliberate design choice. Python became a **coordination
 language**: the glue used to drive numeric libraries, database drivers,
-graphics toolkits, and scientific codes written in Fortran and C. The
+graphics toolkits, and scientific code written in Fortran and C. The
 scientific Python stack (NumPy, SciPy, pandas, PyTorch) exists because
 writing extensions was easy.
 
@@ -460,3 +460,62 @@ ecosystem compatibility over multi-core scaling. PEP 703 is the first approach
 that preserves both while removing the GIL, and it only works because biased
 refcounting and immortal objects finally made refcount arithmetic cheap enough
 to be thread-safe by default.
+
+## Appendix: In an Extension, What Gets Refcounted?
+
+Any PyObject* the extension touches. The entire Python object model in C is PyObject*, and every Python value (ints,
+strings, lists, dicts, user-defined instances, function objects, modules, types, everything) has ob_refcnt as the
+first field of its C struct, exposed via the PyObject_HEAD macro.
+
+Concretely, the refcount manipulation happens on:
+
+- Arguments coming in. A C function receives its args as PyObject*. Whether it needs to INCREF them depends on
+"borrowed vs. owned" semantics it has to track.
+- Return values going out. PyLong_FromLong(42) returns a new reference (refcount 1). The caller owns it; whoever
+eventually receives it must DECREF when done.
+- Items fetched from containers. PyDict_GetItem returns a borrowed reference; if the extension wants to hold onto it
+past the dict's lifetime, it must INCREF. PyList_GetItem same. PyList_SetItem steals a reference to the value being
+inserted, so the caller must not DECREF after.
+- Cached or stored objects. Anything the extension stashes in a C static variable, a struct field, or its module state
+  needs an INCREF to keep it alive, and a matching DECREF at teardown.
+- Intermediate objects. Temporaries created during the function body (e.g., a list being built up to return) need
+their refcounts balanced before exit.
+
+It's important to note that Py_INCREF is a C macro, not a function. It expands inline to ((PyObject*)(op))->ob_refcnt++. So every
+compiled extension has ob_refcnt++ written directly into its machine code against the current struct layout. That's
+why this is an ABI issue rather than just an API issue: CPython can't change how refcounting works (atomicize it, add
+a bias field, make it deferred) without every already-compiled .so/.pyd on users' machines executing the wrong machine
+  instruction against the new layout.
+
+There is no stack allocation for Python objects. Every PyObject lives on the heap, and refcounting is the only
+  mechanism that ever frees it. If an extension creates a temporary and doesn't DECREF it before returning, it leaks,
+  even if no Python code or C code outside that function ever saw it.
+
+  Concrete example:
+
+  static PyObject* add_them(PyObject *self, PyObject *args) {
+      PyObject *x = PyLong_FromLong(10);   // new reference, refcount = 1
+      PyObject *y = PyLong_FromLong(20);   // new reference, refcount = 1
+      PyObject *sum = PyNumber_Add(x, y);  // new reference, refcount = 1
+      Py_DECREF(x);                        // refcount -> 0, freed immediately
+      Py_DECREF(y);                        // refcount -> 0, freed immediately
+      return sum;                          // ownership transferred to caller
+  }
+
+  x and y never leave the function. They still need explicit Py_DECREF calls, or they leak. The Python integers 10 and
+  20 are heap objects; there's no "local variable" lifetime managing them.
+
+ Note:
+
+  1. Borrowed vs. new references. Objects you receive (function arguments, results of PyDict_GetItem, PyList_GetItem)
+  are usually borrowed: you do not DECREF them. Objects you create (anything with From, New, or Py_BuildValue in its
+  name) are new references: you must DECREF eventually, or transfer ownership. This distinction isn't visible in the C
+  type system; it's documented per-function and the extension author has to track it mentally.
+  2. Immortal objects in 3.12+ (PEP 683). None, True, False, small integers, and interned strings now carry a sentinel
+  refcount that never changes. Py_INCREF(Py_None) is a no-op at runtime. But the extension author still writes the macro
+   in source, and still reasons as if it were a normal refcount, because the macro is the contract and the optimization
+  is invisible below it.
+
+  The net effect: the C extension author is essentially hand-rolling garbage collection, one INCREF/DECREF pair at a
+  time, for every PyObject* that passes through their code. This is the cost side of decision (2) in the document, and
+  it's what makes the ecosystem so sensitive to any change in how refcounts work.
