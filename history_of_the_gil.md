@@ -250,6 +250,33 @@ cost that you pay whether or not you have threads, and making refcounts
 thread-safe with traditional techniques *always* makes that cost visibly
 higher. As long as that was true, the challenge couldn't be met.
 
+## 2008: multiprocessing
+
+Python 2.6 (2008) added the `multiprocessing` module. It exposes a
+threading-like API (`Process`, `Queue`, `Pool`) but spawns OS processes
+instead of threads. Each process has its own interpreter, its own memory
+space, and its own GIL, so CPU-bound work scales linearly across cores with
+no lock contention.
+
+This is a workaround rather than a fix. The GIL is still there, and the API
+cost is real:
+
+- **Process startup is expensive.** `fork` is cheap on Linux, but `spawn`
+  (the default on Windows and macOS for recent versions) serializes and
+  re-imports everything, which can take hundreds of milliseconds per worker.
+- **Sharing goes through pickling.** Objects passed between processes are
+  serialized, which is slow and rejects many types.
+  `multiprocessing.shared_memory` (3.8) and `Manager` proxies help, at the
+  cost of extra code.
+- **Debugging, logging, and exception handling all cross process
+  boundaries**, which complicates the tooling story.
+
+`multiprocessing` works well for coarse-grained parallelism: map a function
+over a large input, run a pool of long-lived workers. It is a poor fit for
+fine-grained sharing, which is exactly the case threads handle well on
+other runtimes. Closing that gap is what per-interpreter GIL and
+free-threading are for.
+
 ## 2014: asyncio and async/await
 
 The original 1992 motivation for threads was I/O concurrency. Python 3.4
@@ -337,6 +364,46 @@ concurrency model for one workload, not a replacement for threads in
 general, so the GIL (or the PEP 703 machinery that replaces it) is still
 required.
 
+## 2023: Per-Interpreter GIL
+
+CPython has always supported multiple interpreters inside one process
+through the `Py_NewInterpreter` C API. Until recently they all shared one
+GIL and most of the runtime's global state, so they offered no parallelism
+benefit.
+
+PEP 684, accepted in 2022 and shipped in Python 3.12 (October 2023), gave
+each subinterpreter its own GIL by moving runtime state off globals and
+onto per-interpreter structures. PEP 734, shipped in Python 3.14, adds the
+stdlib `interpreters` module so Python code (not just C code) can create
+and drive them.
+
+The model: one OS process, multiple interpreters, each with its own GIL
+and its own set of imported modules. Interpreters communicate through
+explicit channels rather than shared objects, closer to Go or Erlang than
+to traditional threading.
+
+Compared to `multiprocessing`:
+
+- **Cheaper startup**, with no new process and no re-import.
+- **Lower IPC overhead.** Channels can pass a limited set of types without
+  pickling.
+- **Same address space**, leaving room for zero-copy sharing of immutable
+  data.
+
+Compared to free-threading (PEP 703):
+
+- **Existing extensions keep working**, as long as they are
+  interpreter-aware. This is a much weaker requirement than full thread
+  safety.
+- **No shared mutable state.** That is a safety property, not a limitation
+  to overcome.
+
+Subinterpreters and free-threading target different workloads.
+Free-threading is for code that wants the shared-memory thread model
+running on multiple cores. Subinterpreters are for code that wants
+isolation and message passing on multiple cores without the cost of
+separate processes.
+
 ## 2023: PEP 703
 
 Sam Gross's PEP 703, accepted in October 2023, is the first approach that
@@ -365,7 +432,7 @@ project demonstrates. It meets the single-threaded performance bar. It is
 still opt-in. And it changes the contract that extension authors have relied
 on for three decades.
 
-## The Short Version
+## Summary
 
 The GIL is what you get when you choose refcounting, expose it through a
 direct extension API, add threads for I/O, and then need to make refcounts
