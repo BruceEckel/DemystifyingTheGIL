@@ -71,7 +71,7 @@ decision was now baked in. The rest of the story is shaped by it.
 Python 0.9.0 shipped in February 1991. One of its defining features was how
 easy it was to write C extensions. The C API did not hide the object model: it
 exposed `PyObject*` as a raw pointer and `Py_INCREF`/`Py_DECREF` as public
-macros. Any C programmer could wrap a library in an afternoon.
+macros.
 
 This was a deliberate design choice. Python became a **coordination
 language**: the glue used to drive numeric libraries, database drivers,
@@ -81,7 +81,7 @@ writing extensions was easy.
 
 The cost: **the reference count is now part of the public ABI.**
 
-Extension authors don't just *use* refcounting; they *manipulate refcounts
+Extension authors *manipulate refcounts
 directly*. Every extension written between 1991 and today contains code that
 assumes `ob_refcnt` is a plain integer and that incrementing it is just an
 integer add. You cannot change how refcounting works without breaking every
@@ -95,8 +95,8 @@ tighter constraint on future evolution.
 
 ## 1992: Threads are Added
 
-Python 0.9.x introduced threading around 1992. Guido wrapped the platform's OS
-threads (pthreads on Unix, native threads on Windows) and exposed them through
+Python 0.9.x introduced threading around 1992, wrapping the platform's OS
+threads (pthreads on Unix, native threads on Windows) and exposing them through
 the `thread` (later `threading`) module.
 
 The motivation was **I/O concurrency**, not multi-core performance:
@@ -119,7 +119,7 @@ With threads added, all three ingredients are now present:
 - **An extension ecosystem manipulating those refcounts directly** (from 1991).
 - **Threads that share memory** (from 1992).
 
-Refcount races are now possible in real programs. Synchronization is required.
+Real programs can now have races during object reference counts.Synchronization is *required*.
 
 ## The Synchronization Choice
 
