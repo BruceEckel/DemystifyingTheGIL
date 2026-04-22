@@ -36,7 +36,7 @@ This was a good choice in 1990:
 - **Simple to implement.** A small number of macros (`Py_INCREF`, `Py_DECREF`)
   and no separate collector thread.
 - **Deterministic destruction.** Files close when their last reference drops.
-  Locks release. Sockets shut down. No "wait for GC to get around to it." This
+  Locks release. Sockets shut down. No "wait for the garbage collector (GC) to get around to it." This
   matters for a language designed to glue C libraries together, where those
   libraries hold OS resources.
 - **No world-stop pauses.** Tracing garbage collectors of the era stopped every
@@ -81,13 +81,18 @@ writing extensions was easy.
 
 The cost: **the reference count is now part of the public ABI.**
 
-Extension authors *manipulate refcounts
+Where an Application Programming Interface (API) is a contract at the source-code level (function names, signatures, types that a compiler checks), an Application Binary Interface (ABI)
+is the contract at the compiled-binary level: struct layouts, field offsets, calling conventions, symbol names, which
+things are inlined vs. called through a function. Two libraries are ABI-compatible if a binary compiled against one
+version still runs against another without recompiling.
+
+Reference counting is part of the ABI: extension authors *manipulate refcounts
 directly*. Every extension written between 1991 and today contains code that
 assumes `ob_refcnt` is a plain integer and that incrementing it is just an
 integer add. You cannot change how refcounting works without breaking every
 extension in existence.
 
-Compare this to Java's JNI: JNI hides the GC entirely. Extensions get opaque
+Compare this to Java's JNI, which hides the GC entirely. Extensions get opaque
 object handles; the GC can relocate objects, change its algorithm, or run
 concurrently, and no JNI code notices. Python chose the opposite trade: a
 leakier but simpler API, and got a richer ecosystem in exchange for a much
