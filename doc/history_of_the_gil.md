@@ -445,15 +445,14 @@ directly, using techniques that didn't exist (or weren't mature enough) in the
   modules) defer their refcount updates to safe points, avoiding contention on
   frequently-referenced objects.
 - **Per-object locks for mutable containers.** Dicts and lists get their own
-  locks, acquired only when needed. Acceptable because they're not the hot
+  locks, acquired only when needed. This is acceptable because they're not the hot
   path for refcounts.
 - **A thorough audit of interpreter state.** Thousands of places that
   implicitly assumed "I'm the only thread here" had to be found and fixed.
 
-This is the free-threaded build (`3.13t`, `3.14t`) that the rest of this
-project demonstrates. It meets the single-threaded performance bar. It is
-still opt-in. It also changes the contract that extension authors have
-relied on for three decades.
+This is the free-threaded build (`3.13t`, `3.14t`) that meets the single-threaded performance bar.
+It is still opt-in. It also changes the contract that extension authors have
+relied on for three decades (see `the_broken_contract.md`).
 
 ## Summary
 
@@ -513,7 +512,7 @@ extension creates a temporary and doesn't `Py_DECREF` it before returning,
 it leaks, even if no Python code or C code outside that function ever saw
 it.
 
-Concrete example:
+A concrete C example:
 
 ```c
 static PyObject* add_them(PyObject *self, PyObject *args) {
@@ -527,8 +526,8 @@ static PyObject* add_them(PyObject *self, PyObject *args) {
 ```
 
 `x` and `y` never leave the function. They still need explicit `Py_DECREF`
-calls, or they leak. The Python integers `10` and `20` are heap objects;
-there's no "local variable" lifetime managing them.
+calls, or they leak. The Python integers `10` and `20` are heap objects
+so they are not managed via a "local variable" stack lifetime.
 
 Note:
 
