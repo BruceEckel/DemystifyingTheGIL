@@ -130,8 +130,8 @@ also harder because control flow is distributed across message traces
 rather than visible in one call stack.
 
 Erlang built an industry on this (Ericsson's telecom switches).
-Elixir carries that model forward on the BEAM
-runtime. Akka brought it to the JVM.
+Elixir carries that model forward on the BEAM runtime.
+Akka brought it to the JVM.
 
 ### CSP (Communicating Sequential Processes)
 
@@ -202,11 +202,14 @@ Duplicating a large dataset across N workers costs N times the RAM,
 unless you opt into explicit shared memory, which gives back the
 isolation you just paid for.
 
-IPC is seen everywhere at the OS level. Unix pipelines. Web servers spawning worker
-processes. Database systems with separate query processes. Python's
-`multiprocessing`. MPI for scientific computing across cluster nodes.
+IPC is seen everywhere at the OS level. Also:
+- Unix pipelines
+- Web servers spawning worker processes
+- Database systems with separate query processes
+- Python's `multiprocessing`
+- MPI for scientific computing across cluster nodes
 
-### CSP vs. IPC in one line
+### CSP vs. IPC
 
 CSP is "threads that agree not to share"; IPC is "processes that
 *cannot* share without asking the OS." The first is cheap and
@@ -214,14 +217,17 @@ conventional; the second is expensive and enforced. They are aimed at
 different problems and often appear in the same system at different
 layers.
 
-## Strategies That Change What "Concurrent" Means
+## Non-memory-based Strategies
+
+The previous strategies were determined by whether you need to share or isolate memory.
+The strategies presented here solve different problems.
 
 ### Cooperative scheduling (event loops, coroutines, async/await)
 
 Don't actually run things in parallel. Run them one at a time on a single
 thread, but switch between them at well-defined yield points.
 
-**Apply when:** the bottleneck is the fact that you're waiting on something (network, disk, user input),
+**Apply when:** the bottleneck happens because you're waiting on something (network, disk, user input),
 rather than computing something. Tens of thousands of concurrent connections can share
 one thread because most are idle most of the time. There are no race conditions on
 shared state between yield points, because there are no preemptive
@@ -310,7 +316,7 @@ access). For problems dominated by data access rather than communication,
 shared memory wins by orders of magnitude.
 
 This is why the GIL has been such a persistent pain point for numeric and
-scientific Python: the workloads *want* shared memory, the hardware
+scientific Python: the workloads need shared memory, the hardware
 supports it, the data is already sitting in one address space, and the
 language was blocking threads from using it in parallel.
 

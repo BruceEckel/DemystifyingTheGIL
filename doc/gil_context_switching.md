@@ -1,6 +1,6 @@
 # The GIL and Context Switching
 
-How many opcodes does Python have? 
+How many opcodes does Python have?
 The count depends on how you measure and which Python version you're running.
 **Base opcodes** (the ones you see in `dis` output) number roughly **100–130**
 in Python 3.13/3.14. You can check exactly:
@@ -142,7 +142,7 @@ What also makes the GIL unusual is that it is a *single global lock* covering
 the entire interpreter, not a fine-grained lock around specific data. "Entering a
 critical section" in CPython effectively means "holding the GIL," which every
 thread already does whenever it runs Python code. Preemptive scheduling then
-becomes: which thread gets to hold that one lock next.
+becomes: which thread next holds the single lock.
 
 ## Making the race visible: forcing a context switch
 
