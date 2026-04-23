@@ -1,7 +1,7 @@
 # gil_utils.py
 import sys
-import threading
 from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 import constants as c
@@ -16,7 +16,7 @@ def gil_info() -> str:
 
 
 _GREEN = "\033[32m"
-_RED   = "\033[31m"
+_RED = "\033[31m"
 _RESET = "\033[0m"
 
 
@@ -32,11 +32,10 @@ def report(label: str, actual: int, expected: int) -> None:
 
 
 def run_threads(target: Callable[..., None], args: tuple[Any, ...] = ()) -> None:
-    threads = [threading.Thread(target=target, args=args) for _ in range(c.NUM_THREADS)]
-    for t in threads:
-        t.start()
-    for t in threads:
-        t.join()
+    # Structured concurrency:
+    with ThreadPoolExecutor(max_workers=c.NUM_THREADS) as pool:
+        for _ in range(c.NUM_THREADS):
+            pool.submit(target, *args)
 
 
 if __name__ == "__main__":

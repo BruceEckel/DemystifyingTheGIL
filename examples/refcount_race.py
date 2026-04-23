@@ -11,7 +11,7 @@ Without the GIL, threads interleave freely: negative → premature free (use-aft
 positive → memory leak.
 """
 
-import threading
+from concurrent.futures import ThreadPoolExecutor
 
 import constants as c
 from gil_utils import gil_info, show_status
@@ -40,12 +40,9 @@ def dec_refcount() -> None:
 if __name__ == "__main__":
     print(gil_info())
 
-    t1 = threading.Thread(target=inc_refcount)
-    t2 = threading.Thread(target=dec_refcount)
-    t1.start()
-    t2.start()
-    t1.join()
-    t2.join()
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        pool.submit(inc_refcount)
+        pool.submit(dec_refcount)
 
     n = obj.refcount
     match (n, free_threading):
