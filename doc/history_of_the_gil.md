@@ -273,8 +273,7 @@ instead of threads. Each process has its own interpreter, its own memory
 space, and its own GIL, so CPU-bound work scales linearly across cores with
 no lock contention.
 
-This is a workaround rather than a fix. The GIL is still there, and the API
-cost is real:
+The GIL is still there, and the API cost is real:
 
 - **Process startup is expensive.** `fork` is cheap on Linux, but `spawn`
   (the default on Windows and macOS for recent versions) serializes and
@@ -341,9 +340,10 @@ the source.
   `async` functions. Introducing async into an existing synchronous
   codebase is not a local refactor; it propagates up every call site.
   Large conversions are effectively rewrites.
-- **C extension behavior.** Async changes when Python schedules work, not
-  what C extensions do. A C extension that blocks on a syscall without
-  releasing the GIL still blocks the event loop.
+- **C extension behavior.** Async only controls how Python-level
+  coroutines are scheduled; it doesn't change how C extensions run. A C
+  extension that blocks on a syscall without releasing the GIL still
+  blocks the event loop.
 
 ### How asyncio affects the GIL story
 
@@ -389,13 +389,21 @@ benefit.
 PEP 684, accepted in 2022 and shipped in Python 3.12 (October 2023), gave
 each subinterpreter its own GIL by moving runtime state off globals and
 onto per-interpreter structures. PEP 734, shipped in Python 3.14, adds the
-stdlib `interpreters` module so Python code (not just C code) can create
-and drive them.
+stdlib `concurrent.interpreters` module so Python code (not just C code)
+can create and drive them.
 
 The model: one OS process, multiple interpreters, each with its own GIL
 and its own set of imported modules. Interpreters communicate through
-explicit channels rather than shared objects, closer to Go or Erlang than
-to traditional threading.
+explicit channels rather than shared objects, closer to Erlang processes
+than to traditional threading.
+
+The shared address space is an implementation detail, not a programming
+model. Goroutines share memory directly: any goroutine can touch any
+variable another sees. Subinterpreters don't. Each one has its own
+`sys.modules` and its own object world, and Python code cannot reach
+across and mutate another interpreter's state. The shared address space
+exists so channels can hand off buffers without copying, not so code can
+share objects.
 
 Compared to `multiprocessing`:
 
