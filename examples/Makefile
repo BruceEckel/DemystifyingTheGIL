@@ -5,7 +5,7 @@ EXAMPLES = counter_race.py counter_lock.py two_counters.py context_switch.py \
            surprise.py no_surprise.py stats_race.py connection_pool.py refcount_race.py \
            cpu_parallel.py
 
-.PHONY: all gil nogil help $(EXAMPLES)
+.PHONY: all gil nogil overhead help $(EXAMPLES)
 
 .DEFAULT_GOAL := help
 
@@ -14,6 +14,7 @@ help:
 	@echo "  make gil          -- run all examples with the GIL"
 	@echo "  make nogil        -- run all examples without the GIL"
 	@echo "  make all          -- run both"
+	@echo "  make overhead     -- compare single-threaded perf across builds"
 	@echo "  make <script.py>  -- run one example with GIL then no GIL (no .\ prefix)"
 
 all: gil nogil
@@ -61,6 +62,9 @@ nogil:
 	$(NOGIL) refcount_race.py
 	@echo "=== cpu_parallel.py ==="
 	$(NOGIL) cpu_parallel.py
+
+overhead:
+	uv run python compare_overhead.py
 
 $(EXAMPLES):
 	$(GIL) $@

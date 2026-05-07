@@ -9,7 +9,7 @@ reference counts.
 The questions answered here:
 
 - How are reference counts kept consistent without a global lock?
-- Is there a garbage collector now? (Yes, and there always was.)
+- Is there a cycle-detecting garbage collector now? (Yes, and there always was.)
 - How can existing C extensions, which assume the GIL, keep working
   unmodified?
 - What did the interpreter itself have to change?
@@ -185,7 +185,7 @@ atomic increment on every single read.
 Dicts, lists, and sets are mutated in-place. Two threads writing to
 the same dict can corrupt the hash table; two threads, one writing
 and one resizing, can produce a use-after-free even with correct
-refcounting. The GIL used to make these operations safe by accident.
+refcounting. Previously, the GIL made these operations safe by accident.
 
 In the free-threaded build, each mutable container carries its own
 lightweight mutex. Operations that mutate the container acquire it;
@@ -204,7 +204,7 @@ other. This is the unlock-the-cores property the GIL never had.
 ## Memory Allocator: mimalloc
 
 CPython's old object allocator (`obmalloc`) used arenas with no
-internal synchronization, relying on the GIL for safety. It cannot
+internal synchronization, relying on the GIL for safety. This approach cannot
 work without the GIL.
 
 The free-threaded build replaces the small-object allocator with
