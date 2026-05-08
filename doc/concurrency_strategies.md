@@ -3,6 +3,16 @@
 The main division between concurrency models is whether concurrent
 units share memory or stay isolated.
 
+At the OS level, this maps to the distinction between threads and
+processes. A *process* owns a virtual address space, heap, and file
+descriptors. A *thread* is a unit of execution running inside a
+process. Threads in the same process share that address space;
+separate processes do not. Shared-memory strategies typically run as
+threads inside one process, and isolated-memory strategies typically
+run as separate processes. Cooperative concurrency (event loops,
+coroutines) is a third case: many tasks multiplexed onto a single
+thread.
+
 **Shared memory.** All units see the same data structures. Communication
 is as cheap as reading a pointer. A thread can hand a 10 GB dataset to
 another thread by passing its address, zero copying. This is why

@@ -9,8 +9,8 @@ Because multiple processing units are under control of the system,
 each processor can perform calculations in parallel with the other processors.
 
 When the additional processing units are outside the system boundary,
-we call concurrency "asynchrony" or "cooperative multitasking."
-There are still processing units working in parallel, but they are outside the control of the system.
+we call concurrency "asynchrony" or "cooperative multitasking" or "coroutines."
+These are still processing units working in parallel, but they are outside the control of the system.
 For example, when you make a call to an external server, that server is driven by its own processor(s).
 Waiting for that result when you could be doing something else in the meantime reduces progress.
 Asynchrony mechanisms automate the disconnection from waiting for that result.
