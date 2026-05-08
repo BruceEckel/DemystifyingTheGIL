@@ -1,5 +1,11 @@
 # The GIL and Context Switching
 
+A Python interpreter executes a stream of *opcodes*: small instructions
+that the bytecode compiler produces from your source. `a + b` becomes
+several opcodes (load `a`, load `b`, perform the addition, store the
+result), and the interpreter runs them one at a time. The GIL controls
+how the opcode streams from different threads interleave.
+
 How many opcodes does Python have?
 The count depends on how you measure and which Python version you're running.
 **Base opcodes** (the ones you see in `dis` output) number roughly **100–130**
@@ -26,7 +32,10 @@ substitutes at runtime for frequently-executed code paths. These add another
 ## Why this matters for the GIL demo
 
 The race condition in `counter += 1` comes from the fact that it is **not
-atomic**. You can see the opcodes it compiles to with `dis`:
+atomic**. An operation is *atomic* if no other thread can observe it
+half-done: it has either not started or has finished, never an
+in-between state. You can see the opcodes `counter += 1` compiles to
+with `dis`:
 
 ```python
 import dis

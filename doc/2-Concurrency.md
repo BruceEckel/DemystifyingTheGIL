@@ -2,9 +2,12 @@
 
 Concurrency is the organization of multiple processors to produce faster progress.
 It consists of numerous strategies, applied according to different design constraints.
-These strategies are categorized by whether the processors are inside a system boundary, or outside that boundary.
 
-When multiple processing units are inside the system boundary, we call concurrency "parallelism."[1]
+A useful way to categorize these strategies is by where the processors live relative to your program: under your program's direct control, or somewhere outside it.
+Call your program (and the runtime it controls) the *system*. Everything else (other machines, the OS kernel, the network, the user, the disk) sits outside that system.
+The line between the two is the *system boundary*.
+
+When multiple processing units are inside the system boundary, we call concurrency "parallelism."[^1]
 Because multiple processing units are under control of the system,
 each processor can perform calculations in parallel with the other processors.
 
@@ -44,7 +47,7 @@ If your system is fast enough, don't wade into this.
 If it is indeed too slow, first consider simpler alternatives (use Occam's razor):
 
 - **Profile your system and identify bottleneck functions**.
-  Convert these into Rust modules via PyO3.
+  Convert these into Rust modules via PyO3 (a crate that lets Rust code expose Python-callable functions).
   using AI this is now surprisingly straightforward and reliable.
   If this solves your performance problem it will usually be an easier approach than dealing with concurrency.
 
@@ -153,4 +156,4 @@ Broadly, concurrency problems fall into these categories:
   A slow thread holds a lock and forces all other threads to queue behind it, serializing what should be parallel work.
   A subtle performance problem rather than a correctness problem.
 
-[^1]You might have heard the phrase "concurrency is not parralelism." This is better stated as "concurrency is not *only* parallelism."
+[^1]: You might have heard the phrase "concurrency is not parallelism." This is better stated as "concurrency is not *only* parallelism."

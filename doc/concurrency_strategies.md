@@ -40,8 +40,11 @@ inside a process, message passing across processes or machines.
 
 ### Locks (mutexes, semaphores)
 
-The oldest answer: wrap any shared mutation in a mutex. Whoever holds the
-lock has exclusive access.
+The oldest answer: wrap any shared mutation in a *mutex*, a lock that
+permits one holder at a time. Whoever holds it has exclusive access. A
+*semaphore* generalizes this to allow up to N simultaneous holders,
+useful for capping concurrent access to a pool of resources (database
+connections, worker slots) rather than enforcing strict mutual exclusion.
 
 **Apply when:** critical sections are short, contention is low, and the
 data being protected fits naturally behind one lock.
@@ -58,7 +61,9 @@ be released.
 ### Atomic operations and lock-free data structures
 
 Use hardware primitives (compare-and-swap, atomic increment,
-fetch-and-add) to build data structures that don't need locks. A
+fetch-and-add: CPU instructions guaranteed indivisible by the hardware,
+so no other core can observe them half-done) to build data structures
+that don't need locks. A
 lock-free queue lets producers and consumers make progress simultaneously
 without blocking each other.
 
@@ -140,8 +145,8 @@ also harder because control flow is distributed across message traces
 rather than visible in one call stack.
 
 Erlang built an industry on this (Ericsson's telecom switches).
-Elixir carries that model forward on the BEAM runtime.
-Akka brought it to the JVM.
+Elixir carries that model forward on the BEAM (Erlang's virtual machine)
+runtime. Akka brought it to the JVM.
 
 ### CSP (Communicating Sequential Processes)
 
@@ -187,9 +192,10 @@ implementation on the JVM.
 ### Isolated processes with IPC
 
 IPC is *physical* isolation. Each process has its own address space, its
-own heap, its own file descriptors. The OS and the MMU enforce this: one
-process literally cannot read another's memory without an explicit,
-mapped-in shared segment. A segfault, a null-pointer dereference, or an
+own heap, its own file descriptors. The OS and the hardware MMU (Memory
+Management Unit, which translates virtual addresses to physical memory)
+enforce this: one process literally cannot read another's memory without
+an explicit, mapped-in shared segment. A segfault, a null-pointer dereference, or an
 abort in one process affects only that process. The others keep running.
 
 Communication crosses the kernel: pipes, sockets, message queues,

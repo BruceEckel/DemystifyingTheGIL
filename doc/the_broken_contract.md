@@ -29,7 +29,9 @@ runs." Free-threading invalidates them one by one.
 - **Type slots, method tables, and class hierarchies are read-mostly and
   stable.** I can cache a pointer to a type's `tp_getattro` slot and reuse it.
 - **Memory ordering is not my problem.** The GIL acquire/release pair acts as
-  a full barrier. Writes one thread performs before releasing the GIL are
+  a full *memory barrier* (a synchronization point that forces pending writes
+  to become visible across threads, instead of sitting in a CPU's local store
+  buffer or cache). Writes one thread performs before releasing the GIL are
   visible to the next thread that acquires it.
 
 ## What Free-Threading Forces

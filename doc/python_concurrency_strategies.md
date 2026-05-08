@@ -13,7 +13,7 @@
 
 ## `async`/`await`
 
-Cooperative, single-threaded concurrency. A coroutine runs until it hits an `await`, then yields control to the event loop, which runs another coroutine. No thread is ever switched preemptively.
+Cooperative, single-threaded concurrency. A *coroutine* is a function that can pause itself: when it executes `await`, it returns control to a scheduler called the *event loop*, which picks another ready coroutine and resumes it. All coroutines run on one thread, taking turns at explicit yield points. No thread is ever switched preemptively.
 
 **Strengths:**
 - No race conditions on shared state between `await` points
@@ -96,7 +96,7 @@ Separate OS processes, each with its own Python interpreter and GIL. The OS prov
 - Compatible with all existing libraries
 
 **Weaknesses:**
-- High startup cost (forking or spawning a process takes time)
+- High startup cost. *Forking* clones the parent process (fast, but inherits its locks, threads, and open file descriptors, which can misbehave). *Spawning* starts a fresh interpreter (slower, cleaner state). Spawn is the default on Windows and macOS; fork is still available on Linux.
 - Data passed between processes must be serialized (pickled), which is slow for large objects
 - Shared state requires explicit mechanisms (`multiprocessing.shared_memory`, `Manager`, `Value`)
 - Higher memory usage (each process has its own heap)
