@@ -2,7 +2,7 @@
 
 This document explains, in implementation terms, what changed inside CPython
 to enable the free-threaded build (`3.13t`, `3.14t`, etc.). It assumes you
-have read `history_of_the_gil.md` and `refcounts_and_extensions.md`, which
+have read `5-HistoryOfTheGIL.md` and `7-RefcountsAndExtensions.md`, which
 cover *why* the GIL existed and how the C extension API depends on
 reference counts.
 
@@ -359,7 +359,7 @@ fn my_extension(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
 This sets `Py_MOD_GIL_NOT_USED` in the underlying module definition.
 Rust's borrow checker continues to enforce the `Python<'py>` token
-contract described in `refcounts_and_extensions.md`, so the same
+contract described in `7-RefcountsAndExtensions.md`, so the same
 patterns that were safe under the GIL remain safe under free-threading,
 provided the author has not relied on implicit serialization for
 shared mutable state.
