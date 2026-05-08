@@ -6,8 +6,9 @@ Guido van Rossum, a year or so prior.
 Guido made a comment to the effect of,
 "I think people will be surprised by the side effects of working without the GIL."
 Eventually I began wondering what the simplest side effects might be.
-The goal of the presentation is to show how behavior changes when the GIL is removed from simple code examples,
+My goal for the presentation is to show how behavior changes when the GIL is removed from simple code examples,
 and to explain why that happens.
 This way people might be a little less surprised when these changes occur and have a sense of how to attack the problem.
 
 The explanation turned out to be more challenging than I had anticipated.
+The research generated this book.
