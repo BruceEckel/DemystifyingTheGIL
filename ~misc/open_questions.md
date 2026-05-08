@@ -1,4 +1,4 @@
-# Open Questions for the Presentation
+# Open Questions
 
 ## Technical Gaps
 
@@ -19,13 +19,8 @@ The outline recommends running the test suite under 3.14t, which is good advice.
 
 ## Narrative
 
-**Is there a clear villain and resolution?**
-The current arc is: GIL hides races → no-GIL exposes them → add locks. That is correct, but the villain is abstract ("the GIL was lying to you"). A sharper framing might be: the villain is *invisible assumptions*: code that works not because it is correct but because the interpreter happened to serialize things. The resolution is *making your assumptions explicit*. This reframe also applies beyond the GIL.
+**Is there a clear problem and resolution?**
+The current arc is: GIL hides races → no-GIL exposes them → add locks. That is correct, but a sharper framing might be: the problem is *invisible assumptions*: code that works not because it is correct but because the interpreter happened to serialize things. The resolution is *making your assumptions explicit*. This reframe also applies beyond the GIL.
 
 **Does the audience leave with one sentence?**
 A strong talk can be summarized in one sentence by the audience on the way out. The current closest candidate is the slide: "If two threads touch the same data and at least one writes, you need a lock (GIL or not)." Is that the sentence? Knowing it explicitly helps decide which examples to keep and which to cut.
-
-## Housekeeping
-
-**`opmap_contents.py` is still in the examples directory.**
-It is not in the Makefile or CLAUDE.md but will appear if someone lists the directory.
