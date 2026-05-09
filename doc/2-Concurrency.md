@@ -1,6 +1,6 @@
 # Concurrency
 
-Concurrency is the efficient organization of multiple processors.
+Concurrency is the efficient use of multiple processors.
 It is a complex topic because the meaning of "efficient" and "processor" vary significantly depending on the class of problem you are solving.
 This produces numerous strategies which are applied according to your design constraints.
 
