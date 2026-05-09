@@ -12,17 +12,19 @@ The count depends on how you measure and which Python version you're running.
 in Python 3.13/3.14. You can check exactly:
 
 ```python
-# opmap_contents.py
+# examples/opmap_contents.py
 import opcode
 
-print(f"opmap entries: {len(opcode.opmap)}")  # "public" opcodes visible in dis output
-print(f"opname entries: {len(opcode.opname)}")  # larger: also includes <N> reserved slots,
-                                                 # INSTRUMENTED_* debugger opcodes, and
-                                                 # pseudo-instructions used during compilation
+print(f"opmap entries: {len(opcode.opmap)}")
+print(f"opname entries: {len(opcode.opname)}")
 
 for num, name in enumerate(opcode.opname):
     print(f"  {num:3d}  {name}")
 ```
+
+`opmap` holds the "public" opcodes visible in `dis` output; `opname`
+is larger and also includes `<N>` reserved slots, `INSTRUMENTED_*`
+debugger opcodes, and pseudo-instructions used during compilation.
 
 On top of that, Python 3.11+ added **specialized/adaptive opcodes**: internal
 variants like `LOAD_FAST_CHECK` and `BINARY_OP_ADD_INT` that the interpreter
@@ -38,10 +40,13 @@ in-between state. You can see the opcodes `counter += 1` compiles to
 with `dis`:
 
 ```python
+# examples/dis_increment.py
 import dis
 
+
 def increment():
-    counter += 1
+    counter += 1  # pyright: ignore[reportUnboundVariable]
+
 
 dis.dis(increment)
 ```
@@ -161,17 +166,29 @@ The standard fix is to split the operation manually and force a GIL release in
 the middle using `time.sleep(0)`:
 
 ```python
-import threading
+# from examples/context_switch.py
 import time
 
-counter = 0
+import constants as c
+from gil_utils import gil_info, report, run_threads
 
-def increment(iterations):
+counter: int = 0
+
+
+def increment(iterations: int) -> None:
     global counter
     for _ in range(iterations):
-        temp = counter      # LOAD
-        time.sleep(0)       # release GIL → another thread runs here
+        temp = counter  # LOAD
+        time.sleep(0)  # force context switch
         counter = temp + 1  # STORE (may overwrite another thread's write)
+
+
+if __name__ == "__main__":
+    print(gil_info())
+
+    iters = 50
+    run_threads(increment, (iters,))
+    report("threaded", counter, c.NUM_THREADS * iters)
 ```
 
 `time.sleep()` is a blocking call, and all blocking calls release the GIL. This

@@ -3,7 +3,8 @@ NOGIL = uv run --python 3.14t
 
 EXAMPLES = counter_race.py counter_lock.py counter_actor.py two_counters.py context_switch.py \
            surprise.py no_surprise.py stats_race.py connection_pool.py refcount_race.py \
-           cpu_parallel.py
+           cpu_parallel.py dis_increment.py opmap_contents.py async_fetch.py \
+           mp_pool.py process_pool_executor.py
 
 .PHONY: all gil nogil overhead help $(EXAMPLES)
 
@@ -42,6 +43,16 @@ gil:
 	$(GIL) refcount_race.py
 	@echo "=== cpu_parallel.py ==="
 	$(GIL) cpu_parallel.py
+	@echo "=== dis_increment.py ==="
+	$(GIL) dis_increment.py
+	@echo "=== opmap_contents.py ==="
+	$(GIL) opmap_contents.py
+	@echo "=== async_fetch.py ==="
+	$(GIL) async_fetch.py
+	@echo "=== mp_pool.py ==="
+	$(GIL) mp_pool.py
+	@echo "=== process_pool_executor.py ==="
+	$(GIL) process_pool_executor.py
 
 nogil:
 	@echo "=== counter_race.py ==="
@@ -66,6 +77,16 @@ nogil:
 	$(NOGIL) refcount_race.py
 	@echo "=== cpu_parallel.py ==="
 	$(NOGIL) cpu_parallel.py
+	@echo "=== dis_increment.py ==="
+	$(NOGIL) dis_increment.py
+	@echo "=== opmap_contents.py ==="
+	$(NOGIL) opmap_contents.py
+	@echo "=== async_fetch.py ==="
+	$(NOGIL) async_fetch.py
+	@echo "=== mp_pool.py ==="
+	$(NOGIL) mp_pool.py
+	@echo "=== process_pool_executor.py ==="
+	$(NOGIL) process_pool_executor.py
 
 overhead:
 	uv run python compare_overhead.py

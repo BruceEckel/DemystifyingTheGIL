@@ -34,25 +34,33 @@ Cooperative, single-threaded concurrency. A *coroutine* is a function that can p
 **Not appropriate for:** CPU-bound work, or when you need to call synchronous blocking libraries without a workaround.
 
 ```python
+# examples/async_fetch.py
 import asyncio
-import aiohttp
 
-async def fetch(session, url):
-    async with session.get(url) as response:
-        return await response.text()
 
-async def main():
-    async with aiohttp.ClientSession() as session:
-        results = await asyncio.gather(fetch(session, url_a), fetch(session, url_b))
+async def fetch(name: str, delay: float) -> str:
+    print(f"  start {name}")
+    await asyncio.sleep(delay)  # simulates I/O latency
+    print(f"  done  {name}")
+    return f"result for {name}"
+
+
+async def main() -> None:
+    results = await asyncio.gather(
+        fetch("a", 0.3),
+        fetch("b", 0.1),
+        fetch("c", 0.2),
+    )
+    print(results)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
 
 **GIL vs. no-GIL**
 
-The event loop always runs on a single thread, so a blocking call made directly inside a coroutine stalls everything regardless of the build. The difference appears in the workaround: `loop.run_in_executor()` offloads a blocking call to a thread pool.
-
-```python
-result = await loop.run_in_executor(None, blocking_library_call, arg)
-```
+The event loop always runs on a single thread, so a blocking call made directly inside a coroutine stalls everything regardless of the build. The difference appears in the workaround: `result = await loop.run_in_executor(None, blocking_call, arg)` offloads a blocking call to a thread pool.
 
 With the GIL, this works well for I/O-bound blocking calls (the thread releases the GIL during I/O), but for CPU-bound blocking calls the executor thread holds the GIL and stalls the event loop anyway. Without the GIL, the executor thread runs truly in parallel with the event loop for both I/O and CPU-bound work. The need for async-aware libraries remains, but the cost of not having them is reduced.
 
@@ -109,13 +117,24 @@ Separate OS processes, each with its own Python interpreter and GIL. The OS prov
 **Not appropriate for:** Fine-grained parallelism with frequent communication, tasks where startup overhead dominates runtime, or workloads with large datasets that must be in memory simultaneously. Each worker gets its own copy of the data, multiplying memory usage by the number of processes. Workarounds exist (`multiprocessing.shared_memory`, memory-mapped files) but add significant complexity.
 
 ```python
+# examples/mp_pool.py
 from multiprocessing import Pool
 
-def crunch(chunk):
+
+def crunch(chunk: list[int]) -> int:
     return sum(x * x for x in chunk)
 
-with Pool() as pool:
-    results = pool.map(crunch, data_chunks)
+
+if __name__ == "__main__":
+    data_chunks = [
+        list(range(i * 1_000_000, (i + 1) * 1_000_000)) for i in range(4)
+    ]
+
+    with Pool() as pool:
+        results = pool.map(crunch, data_chunks)
+
+    print(f"chunk totals: {results}")
+    print(f"grand total:  {sum(results)}")
 ```
 
 **GIL vs. no-GIL**
@@ -163,10 +182,24 @@ A high-level interface over threads and processes. `ThreadPoolExecutor` backs ta
 **Use when:** You have a collection of independent tasks and want a clean API without managing pools manually. This is the right default for most fan-out-and-collect patterns.
 
 ```python
+# examples/process_pool_executor.py
 from concurrent.futures import ProcessPoolExecutor
 
-with ProcessPoolExecutor() as ex:
-    results = list(ex.map(crunch, data_chunks))
+
+def crunch(chunk: list[int]) -> int:
+    return sum(x * x for x in chunk)
+
+
+if __name__ == "__main__":
+    data_chunks = [
+        list(range(i * 1_000_000, (i + 1) * 1_000_000)) for i in range(4)
+    ]
+
+    with ProcessPoolExecutor() as ex:
+        results = list(ex.map(crunch, data_chunks))
+
+    print(f"chunk totals: {results}")
+    print(f"grand total:  {sum(results)}")
 ```
 
 **GIL vs. no-GIL**
