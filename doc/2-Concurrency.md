@@ -4,11 +4,6 @@ Concurrency is the efficient use of multiple processors.
 It is a complex topic because the meaning of "efficient" and "processor" vary significantly depending on the class of problem you are solving.
 This produces numerous strategies which are applied according to your design constraints.
 
-We usually think of efficiency in terms of speed of execution,
-but in many situations the time it takes to write a program is far more important than execution speed.
-Efficiency can also encompass responsiveness, so that a human (which to the program looks like another processor)
-can easily interact with your system.
-
 A useful way to categorize concurrency strategies is by where the processors live relative to your program:
 under the program's direct control, or somewhere outside it.
 If the program (and the runtime it controls) is the *system*,
@@ -26,18 +21,17 @@ For example, when you make a call to an external server, that server is driven b
 Waiting for that result when you could be doing something in the meantime reduces progress.
 Asynchrony mechanisms automate the disconnection from waiting for that result.
 
-System responsiveness is also a form of asynchrony.
-If a human cannot provide input because the system is not currently paying attention,
-this can slow the progress of that system.
-Asynchrony produces system responsiveness even while the system is doing something else.
-In this case, the human is the external processor.
+The same pattern covers system responsiveness.
+If a human cannot give input because the system is busy elsewhere, the system is effectively blocked on a slow external processor (the human).
+Asynchrony lets the system keep working while still listening.
 
-Note that asynchrony is often conflated with IO.
+Asynchrony is often conflated with IO. The two are related but not the same.
 Any time you reach outside the CPU you perform an IO operation.
 Even something as seemingly straightforward as reading a timer
 (which may be on the chip die but outside the CPU) involves IO.
 If an operating system (OS) is present, this means making a request to the OS
 and then periodically checking (via asynchrony) to see if the OS has completed that request.
+IO is the dominant *reason* to reach for asynchrony; asynchrony is the *mechanism* that makes IO efficient.
 
 ## Why Concurrency?
 
