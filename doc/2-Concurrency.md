@@ -75,7 +75,7 @@ If it is indeed too slow, first consider simpler alternatives (use Occam's razor
 
 -  **CPU-bound, independent tasks (embarrassingly parallel)**.
   No shared data between tasks. Each unit of work is self-contained. Examples: image resizing, password hashing,
-  compression, rendering frames. Best fit: multiprocessing, free-threaded threads, Rust extensions.
+  compression, rendering frames. Best fit: multiprocessing, free-threaded threads (threads in Python's free-threaded build, where the GIL is removed and threads can execute Python in parallel on multiple cores), Rust extensions.
 
 -  **CPU-bound, shared large dataset**.
   All workers need read access to the same large data structure simultaneously. Copying it per-process is impractical.
@@ -154,8 +154,8 @@ Broadly, concurrency problems fall into these categories:
   lock implementations or heavy contention.
 
 - **Memory visibility**.
-  On hardware with weak memory models, one thread's writes may not be visible to another thread without a memory
-  barrier. Python largely hides this, but C extensions that bypass the object model can encounter it.
+  On hardware with weak memory models, one thread's writes may not be visible to another thread without a *memory
+  barrier* (a synchronization point that forces pending writes to become visible across threads, instead of sitting in a CPU's local store buffer or cache). Python largely hides this, but C extensions that bypass the object model can encounter it.
 
 - **Convoying**.
   A slow thread holds a lock and forces all other threads to queue behind it, serializing what should be parallel work.

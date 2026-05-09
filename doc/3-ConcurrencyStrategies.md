@@ -21,10 +21,12 @@ set often doesn't fit anywhere else, and the cost of duplicating it is
 prohibitive.
 
 The price: any mutation someone else can observe is a hazard. Reads that
-look simple (`total += 1`) are read-modify-write sequences, and a
-concurrent writer breaks them. Most bugs in shared-memory code come from
-the gap between "this line looks atomic" and "this line is actually
-atomic."
+look simple (`total += 1`) are *read-modify-write* sequences, and a
+concurrent writer breaks them. An operation is *atomic* if no other
+thread can observe it half-done: it has either not started or has
+finished, never an in-between state. Most bugs in shared-memory code
+come from the gap between "this line looks atomic" and "this line is
+actually atomic."
 
 **Isolated memory.** Each unit has private state, and communication
 crosses a boundary (a channel, a message queue, a socket). Whole

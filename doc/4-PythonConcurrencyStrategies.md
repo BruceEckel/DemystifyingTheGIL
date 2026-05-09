@@ -72,7 +72,7 @@ Preemptive multitasking using OS threads. The OS schedules threads normally. The
 
 This is where the difference is most significant.
 
-With the GIL, only one thread executes Python bytecode at a time. I/O-bound threads make progress concurrently (the GIL releases during I/O), but two threads doing CPU work simply take turns. The GIL also makes race conditions rare, which creates false confidence: code that "works" may be subtly wrong.
+With the GIL, only one thread executes Python *bytecode* (the compiled instruction stream the interpreter runs) at a time. I/O-bound threads make progress concurrently (the GIL releases during I/O), but two threads doing CPU work simply take turns. The GIL also makes race conditions rare, which creates false confidence: code that "works" may be subtly wrong.
 
 Without the GIL, threads run in true parallel on multiple cores. CPU-bound work scales. But all the races the GIL was quietly suppressing are now real and frequent. Every piece of shared mutable state needs explicit synchronization.
 
@@ -126,7 +126,7 @@ What changes is the relative appeal. With the GIL, `multiprocessing` is often th
 
 ## Subinterpreters
 
-Multiple Python interpreters running in the same OS process, each with its own GIL. Added at the C API level in Python 3.12 (PEP 554); higher-level Python APIs are still evolving (PEP 734).
+Multiple Python interpreters running in the same OS process, each with its own GIL. Added at the C API level in Python 3.12 (PEP 554, a Python Enhancement Proposal); higher-level Python APIs are still evolving (PEP 734).
 
 **Strengths:**
 - Intra-process parallelism with stronger isolation than threads
