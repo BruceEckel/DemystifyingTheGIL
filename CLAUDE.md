@@ -39,6 +39,7 @@ uv sync
 - **`gil_utils.py`** — Utility imported by all demo scripts; detects `"free-threading"` in `sys.version` and prints whether GIL is active.
 - **`counter_race.py`** — Threads increment a shared `counter` with no synchronization. With GIL: always correct. Without GIL: race condition produces incorrect results.
 - **`counter_lock.py`** — Same as `counter_race.py` but wraps `counter += 1` in a `threading.Lock()`. Correct under both builds.
+- **`counter_actor.py`** — Actor model: the counter lives on a single thread that processes "inc" messages from a `queue.Queue` mailbox. Workers send messages but never touch the counter, so no lock is needed under either build.
 - **`two_counters.py`** — Two variables incremented together on adjacent lines; they should always be equal. With GIL: always equal. Without GIL: they diverge.
 - **`context_switch.py`** — Makes the race in `counter_race.py` certain by using `time.sleep(0)` to force a GIL release between the LOAD and STORE steps.
 - **`surprise.py`** — A pure function (`increment(x)`) used to update shared state becomes unsafe because the read-modify-write pattern around the call is not atomic. Shows that even a safe function can participate in a race.

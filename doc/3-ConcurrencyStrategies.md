@@ -40,7 +40,7 @@ inside a process, message passing across processes or machines.
 
 ### Locks (mutexes, semaphores)
 
-The oldest answer: wrap any shared mutation in a *mutex*, a lock that
+This wraps any shared mutation in a *mutex*, a lock that
 permits one holder at a time. Whoever holds it has exclusive access. A
 *semaphore* generalizes this to allow up to N simultaneous holders,
 useful for capping concurrent access to a pool of resources (database
@@ -53,14 +53,14 @@ data being protected fits naturally behind one lock.
 held across slow operations (convoying), or the critical section is large
 enough that serializing it erases the parallelism gain.
 
-Nearly every mainstream language provides them. They are flexible but
-error-prone. The programmer is responsible for knowing what each lock
-protects, in what order to acquire multiple locks, and when a lock should
+Nearly every mainstream language provides locks. Locks are flexible but
+error-prone: the programmer is responsible for knowing what each lock
+protects, the order to acquire multiple locks, and when a lock should
 be released.
 
 ### Atomic operations and lock-free data structures
 
-Use hardware primitives (compare-and-swap, atomic increment,
+This uses hardware primitives (compare-and-swap, atomic increment,
 fetch-and-add: CPU instructions guaranteed indivisible by the hardware,
 so no other core can observe them half-done) to build data structures
 that don't need locks. A
@@ -105,7 +105,7 @@ mainstream use, partly because integrating with the rest of the ecosystem
 
 ### Immutability and persistent data structures
 
-Sidestep the problem: if data never changes, concurrent readers can't
+These sidestep the problem: if data never changes, concurrent readers can't
 conflict with writers, because there are no writers. Updates produce a
 new version of the structure that shares unchanged parts with the old one
 (a *persistent* data structure).
@@ -240,8 +240,8 @@ The strategies presented here solve different problems.
 
 ### Cooperative scheduling (event loops, coroutines, async/await)
 
-Don't actually run things in parallel. Run them one at a time on a single
-thread, but switch between them at well-defined yield points.
+This runs tasks one at a time on a single thread,
+switching between them at well-defined yield points.
 
 **Apply when:** the bottleneck happens because you're waiting on something (network, disk, user input),
 rather than computing something. Tens of thousands of concurrent connections can share
@@ -324,7 +324,7 @@ Examples include Hadoop, Spark, Flink, Dask, and Ray.
 The strongest argument for shared-memory concurrency is that modern
 machines have enough memory that many real datasets can fit in one process.
 A single server with 512 GB of RAM can hold most datasets an organization
-cares about, and accessing that data from multiple threads costs a
+cares about, and accessing that data from multiple threads only takes a
 pointer dereference. The moment you split into isolated processes, the
 same data has to be duplicated across processes (multiplying memory cost)
 or accessed through a communication mechanism (adding latency on every
@@ -334,7 +334,7 @@ shared memory wins by orders of magnitude.
 This is why the GIL has been such a persistent pain point for numeric and
 scientific Python: the workloads need shared memory, the hardware
 supports it, the data is already sitting in one address space, and the
-language was blocking threads from using it in parallel.
+GIL prevented threads from using it in parallel.
 
 ### The correctness argument for isolation
 

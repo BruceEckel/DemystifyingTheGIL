@@ -1,7 +1,7 @@
 GIL   = uv run --python 3.14+gil
 NOGIL = uv run --python 3.14t
 
-EXAMPLES = counter_race.py counter_lock.py two_counters.py context_switch.py \
+EXAMPLES = counter_race.py counter_lock.py counter_actor.py two_counters.py context_switch.py \
            surprise.py no_surprise.py stats_race.py connection_pool.py refcount_race.py \
            cpu_parallel.py
 
@@ -24,6 +24,8 @@ gil:
 	$(GIL) counter_race.py
 	@echo "=== counter_lock.py ==="
 	$(GIL) counter_lock.py
+	@echo "=== counter_actor.py ==="
+	$(GIL) counter_actor.py
 	@echo "=== two_counters.py ==="
 	$(GIL) two_counters.py
 	@echo "=== context_switch.py ==="
@@ -46,6 +48,8 @@ nogil:
 	$(NOGIL) counter_race.py
 	@echo "=== counter_lock.py ==="
 	$(NOGIL) counter_lock.py
+	@echo "=== counter_actor.py ==="
+	$(NOGIL) counter_actor.py
 	@echo "=== two_counters.py ==="
 	$(NOGIL) two_counters.py
 	@echo "=== context_switch.py ==="

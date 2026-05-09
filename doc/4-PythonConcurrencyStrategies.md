@@ -1,5 +1,8 @@
 # Python Concurrency Strategies
 
+In the previous chapter we looked at general concurrency strategies,
+and here we will look at the specific Python approaches.
+
 ## Quick Reference
 
 | Strategy | CPU parallel | I/O concurrent | GIL removal impact |
@@ -207,6 +210,10 @@ All of these strategies exist partly because of what the GIL was doing quietly:
 - Mutual exclusion across interpreter internals
 - Accidental safety for user code that never considered concurrency
 
-Free-threading replaces the first two with atomic operations and finer-grained internal locks. The third item becomes the programmer's responsibility. The other strategies (async, multiprocessing, subinterpreters) sidestep the problem entirely by limiting or eliminating shared mutable state between concurrent units.
+Free-threading replaces the first two with atomic operations and finer-grained internal locks.
+The third item becomes the programmer's responsibility.
+The other strategies (async, multiprocessing, subinterpreters) sidestep the problem entirely
+by limiting or eliminating shared mutable state between concurrent units.
 
-The cleaner the data boundaries between concurrent units, the easier the code is to reason about, regardless of which strategy or Python build you choose.
+The cleaner the data boundaries between concurrent units, the easier the code is to reason about,
+regardless of which strategy or Python build you choose.
