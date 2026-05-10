@@ -1,9 +1,33 @@
 # utils.py
+import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 import constants as c
+
+
+class Timer:
+    elapsed: float
+
+    def __enter__(self) -> "Timer":
+        self._start = time.perf_counter()
+        return self
+
+    def __exit__(self, *_: object) -> None:
+        self.elapsed = time.perf_counter() - self._start
+
+
+def run_in_threads(
+    worker: Callable[[], None],
+    value: Callable[[], int],
+    threads: int = 10,
+) -> None:
+    """Run worker in threads; print value() and elapsed seconds."""
+    with Timer() as t, ThreadPoolExecutor(max_workers=threads) as pool:
+        for _ in range(threads):
+            pool.submit(worker)
+    print(f"{value():,}  ({t.elapsed:.2f}s)")
 
 
 _GREEN = "\033[32m"
