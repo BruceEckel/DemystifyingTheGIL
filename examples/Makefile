@@ -1,9 +1,9 @@
 GIL   = uv run --python 3.14+gil
 NOGIL = uv run --python 3.14t
 
-EXAMPLES = counter_race.py counter_lock.py counter_actor.py two_counters.py context_switch.py \
-           surprise.py no_surprise.py stats_race.py connection_pool.py refcount_race.py \
-           cpu_parallel.py dis_increment.py opmap_contents.py async_fetch.py \
+EXAMPLES = trivial_race.py counter_race.py counter_lock.py counter_actor.py two_counters.py \
+           context_switch.py surprise.py no_surprise.py stats_race.py connection_pool.py \
+           refcount_race.py cpu_parallel.py dis_increment.py opmap_contents.py async_fetch.py \
            mp_pool.py process_pool_executor.py
 
 GIL_TARGETS   = $(addprefix gil-,$(EXAMPLES))
