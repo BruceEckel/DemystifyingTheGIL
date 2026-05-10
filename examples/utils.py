@@ -34,15 +34,18 @@ _RED = "\033[31m"
 _RESET = "\033[0m"
 
 
-def show(label: str, status: str, ok: bool) -> None:
+def show(label: str, status: str, ok: bool, elapsed: float | None = None) -> None:
     color = _GREEN if ok else _RED
-    print(f"  {label:<12} {color}{status}{_RESET}")
+    timing = f"  ({elapsed:.2f}s)" if elapsed is not None else ""
+    print(f"  {label:<12} {color}{status}{_RESET}{timing}")
 
 
-def report(label: str, actual: int, expected: int) -> None:
+def report(
+    label: str, actual: int, expected: int, elapsed: float | None = None
+) -> None:
     ok = actual == expected
     extra = f"  lost {expected - actual:,}" if not ok else ""
-    show(label, f"{actual:>9,}{extra}", ok)
+    show(label, f"{actual:>9,}{extra}", ok, elapsed)
 
 
 def run_threads(worker: Callable[[], None]) -> None:
@@ -58,8 +61,9 @@ def run_and_report(
     value: Callable[[], int],
     expected: int = c.EXPECTED,
 ) -> None:
-    run_threads(worker)
-    report(label, value(), expected)
+    with Timer() as t:
+        run_threads(worker)
+    report(label, value(), expected, t.elapsed)
 
 
 def run_and_show(
@@ -67,6 +71,7 @@ def run_and_show(
     worker: Callable[[], None],
     result: Callable[[], tuple[str, bool]],
 ) -> None:
-    run_threads(worker)
+    with Timer() as t:
+        run_threads(worker)
     status, ok = result()
-    show(label, status, ok)
+    show(label, status, ok, t.elapsed)
