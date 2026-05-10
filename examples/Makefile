@@ -19,7 +19,7 @@ help:
 	@echo "  make nogil        -- run all examples without the GIL"
 	@echo "  make all          -- run both"
 	@echo "  make overhead     -- compare single-threaded perf across builds"
-	@echo "  make <script.py>  -- run one example with GIL then no GIL (no .\ prefix)"
+	@echo "  make <script.py>  -- run one example with GIL then no GIL (.\ prefix accepted)"
 
 all: gil nogil
 
@@ -40,3 +40,9 @@ overhead:
 $(EXAMPLES):
 	$(GIL) $@
 	$(NOGIL) $@
+
+# Accept .\<name>.py from PowerShell tab-completion by forwarding to the plain target.
+define dot_rule
+.\$(1): $(1) ;
+endef
+$(foreach e,$(EXAMPLES),$(eval $(call dot_rule,$(e))))
