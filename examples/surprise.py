@@ -17,26 +17,24 @@ import sys
 import constants as c
 from gil_utils import gil_info, report, run_threads
 
-EXPECTED = c.EXPECTED
-
 counter: int = 0
 
 
-def increment(x: int) -> int:
+def pure(x: int) -> int:
     return x + 1
 
 
 def worker() -> None:
     global counter
     for _ in range(c.ITERATIONS):
-        counter = increment(counter)
+        counter = pure(counter)
 
 
 def run_sequential() -> None:
     global counter
     counter = 0
-    for _ in range(EXPECTED):
-        counter = increment(counter)
+    for _ in range(c.EXPECTED):
+        counter = pure(counter)
 
 
 def run_threaded() -> None:
@@ -59,8 +57,8 @@ def run_threaded_fast_switch() -> None:
 if __name__ == "__main__":
     print(gil_info())
     run_sequential()
-    report("sequential", counter, EXPECTED)
+    report("sequential", counter, c.EXPECTED)
     run_threaded()
-    report("threaded", counter, EXPECTED)
+    report("threaded", counter, c.EXPECTED)
     run_threaded_fast_switch()
-    report("fast switch", counter, EXPECTED)
+    report("fast switch", counter, c.EXPECTED)

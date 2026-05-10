@@ -10,7 +10,7 @@ a wrong answer, or crashes with ZeroDivisionError if count lags total.
 import sys
 
 import constants as c
-from gil_utils import gil_info, show_status, run_threads
+from gil_utils import gil_info, run_threads, show_status
 
 
 class Stats:
@@ -27,7 +27,6 @@ class Stats:
 
 
 stats = Stats()
-EXPECTED = c.EXPECTED
 
 
 def worker() -> None:
@@ -56,18 +55,18 @@ def run_threaded_fast_switch() -> None:
 
 
 def report(label: str) -> None:
-    count_ok = stats.count == EXPECTED
-    total_ok = stats.total == EXPECTED
+    count_ok = stats.count == c.EXPECTED
+    total_ok = stats.total == c.EXPECTED
     ok = count_ok and total_ok
     match (count_ok, total_ok):
         case (True, True):
             status = f"count {stats.count:,}"
         case (False, True):
-            status = f"count {stats.count:,}  expected {EXPECTED:,}"
+            status = f"count {stats.count:,}  c.EXPECTED {c.EXPECTED:,}"
         case (True, False):
-            status = f"total {stats.total:,.0f}  expected {EXPECTED:,}"
+            status = f"total {stats.total:,.0f}  c.EXPECTED {c.EXPECTED:,}"
         case (False, False):
-            status = f"count {stats.count:,}, total {stats.total:,.0f}  expected {EXPECTED:,}"
+            status = f"count {stats.count:,}, total {stats.total:,.0f}  c.EXPECTED {c.EXPECTED:,}"
     show_status(label, status, ok)
 
 
