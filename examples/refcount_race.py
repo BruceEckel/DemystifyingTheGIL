@@ -14,7 +14,7 @@ positive → memory leak.
 from concurrent.futures import ThreadPoolExecutor
 
 import constants as c
-from gil_utils import gil_info, show_status
+from gil_utils import gil_info, show
 
 
 class TrackedObject:
@@ -54,4 +54,4 @@ if __name__ == "__main__":
             msg = f"{n:+d}  negative refcount → use-after-free"
         case _:
             msg = f"{n:+d}  positive refcount → memory leak"
-    show_status("refcount", msg, n == 0)
+    show("refcount", msg, n == 0)

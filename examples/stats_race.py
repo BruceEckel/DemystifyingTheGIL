@@ -10,7 +10,7 @@ a wrong answer, or crashes with ZeroDivisionError if count lags total.
 import sys
 
 import constants as c
-from gil_utils import gil_info, run_threads, show_status
+from gil_utils import gil_info, run_threads, show
 
 
 class Stats:
@@ -67,7 +67,7 @@ def report(label: str) -> None:
             status = f"total {stats.total:,.0f}  c.EXPECTED {c.EXPECTED:,}"
         case (False, False):
             status = f"count {stats.count:,}, total {stats.total:,.0f}  c.EXPECTED {c.EXPECTED:,}"
-    show_status(label, status, ok)
+    show(label, status, ok)
 
 
 if __name__ == "__main__":

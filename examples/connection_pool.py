@@ -12,7 +12,7 @@ import sys
 import threading
 
 import constants as c
-from gil_utils import gil_info, show_status, run_threads
+from gil_utils import gil_info, run_threads, show
 
 
 class ConnectionPool:
@@ -60,7 +60,7 @@ def run_threaded_fast_switch() -> None:
 def report(label: str) -> None:
     n = len(ConnectionPool._creations)
     ok = n == 1
-    show_status(label, "created once" if ok else f"created {n} times", ok)
+    show(label, "created once" if ok else f"created {n} times", ok)
 
 
 if __name__ == "__main__":

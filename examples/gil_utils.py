@@ -20,7 +20,7 @@ _RED = "\033[31m"
 _RESET = "\033[0m"
 
 
-def show_status(label: str, status: str, ok: bool) -> None:
+def show(label: str, status: str, ok: bool) -> None:
     color = _GREEN if ok else _RED
     print(f"  {label:<12} {color}{status}{_RESET}")
 
@@ -28,7 +28,7 @@ def show_status(label: str, status: str, ok: bool) -> None:
 def report(label: str, actual: int, expected: int) -> None:
     ok = actual == expected
     extra = f"  lost {expected - actual:,}" if not ok else ""
-    show_status(label, f"{actual:>9,}{extra}", ok)
+    show(label, f"{actual:>9,}{extra}", ok)
 
 
 def run_threads(target: Callable[..., None], args: tuple[Any, ...] = ()) -> None:
