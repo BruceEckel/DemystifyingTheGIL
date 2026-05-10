@@ -1,8 +1,4 @@
 # concurrency_is_easy.py
-"""
-Simplest demonstration of correct-with-GIL, broken-without-GIL.
-"""
-
 from concurrent.futures import ThreadPoolExecutor
 
 counter = 0

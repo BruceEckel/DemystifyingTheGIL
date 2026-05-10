@@ -9,7 +9,6 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 
 import constants as c
-from gil_utils import gil_info
 
 N: int = 5_000_000
 
@@ -36,7 +35,6 @@ def time_threaded() -> float:
 
 
 if __name__ == "__main__":
-    print(gil_info())
     seq = time_sequential()
     par = time_threaded()
     print(f"  sequential: {seq:6.2f}s")

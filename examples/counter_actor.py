@@ -10,7 +10,7 @@ import queue
 import threading
 
 import constants as c
-from gil_utils import gil_info, report, run_threads
+from utils import report, run_threads
 
 STOP = object()  # Sentinel that tells the actor to shut down.
 
@@ -40,8 +40,6 @@ def worker(mailbox: queue.Queue[object], iterations: int) -> None:
 
 
 if __name__ == "__main__":
-    print(gil_info())
-
     actor = CounterActor()
     actor.start()
     run_threads(worker, (actor.mailbox, c.ITERATIONS))

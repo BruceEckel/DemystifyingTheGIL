@@ -1,18 +1,9 @@
-# gil_utils.py
-import sys
+# utils.py
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 import constants as c
-
-
-def gil_info() -> str:
-    major, minor, *_ = sys.version.split()[0].split(".")
-    free_threading = "free-threading" in sys.version
-    tag = f"Python {major}.{minor}{'t' if free_threading else ''}"
-    status = "No GIL" if free_threading else "Standard GIL"
-    return f"{tag}: {status}"
 
 
 _GREEN = "\033[32m"
@@ -36,7 +27,3 @@ def run_threads(target: Callable[..., None], args: tuple[Any, ...] = ()) -> None
     with ThreadPoolExecutor(max_workers=c.NUM_THREADS) as pool:
         for _ in range(c.NUM_THREADS):
             pool.submit(target, *args)
-
-
-if __name__ == "__main__":
-    print(gil_info())

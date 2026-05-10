@@ -15,7 +15,7 @@ Without the GIL, the race is continuous and the result is wrong.
 import sys
 
 import constants as c
-from gil_utils import gil_info, report, run_threads
+from utils import report, run_threads
 
 counter: int = 0
 
@@ -55,7 +55,6 @@ def run_threaded_fast_switch() -> None:
 
 
 if __name__ == "__main__":
-    print(gil_info())
     run_sequential()
     report("sequential", counter, c.EXPECTED)
     run_threaded()

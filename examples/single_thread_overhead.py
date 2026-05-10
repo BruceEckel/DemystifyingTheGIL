@@ -38,8 +38,6 @@ Caveats:
 import time
 from collections.abc import Callable
 
-from gil_utils import gil_info
-
 ITER: int = 5_000_000
 REPEATS: int = 5  # best-of-N to reduce noise
 
@@ -128,7 +126,6 @@ def time_task(fn: Callable[[], None]) -> float:
 
 
 if __name__ == "__main__":
-    print(gil_info())
     for name, fn in TASKS:
         t = time_task(fn)
         print(f"{name:<8} {t:.4f}")

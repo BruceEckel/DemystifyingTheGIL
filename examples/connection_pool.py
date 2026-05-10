@@ -12,7 +12,7 @@ import sys
 import threading
 
 import constants as c
-from gil_utils import gil_info, run_threads, show
+from utils import run_threads, show
 
 
 class ConnectionPool:
@@ -64,7 +64,6 @@ def report(label: str) -> None:
 
 
 if __name__ == "__main__":
-    print(gil_info())
     run_threaded()
     report("threaded")
     run_threaded_fast_switch()

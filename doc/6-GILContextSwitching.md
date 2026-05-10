@@ -170,7 +170,7 @@ the middle using `time.sleep(0)`:
 import time
 
 import constants as c
-from gil_utils import gil_info, report, run_threads
+from utils import report, run_threads
 
 counter: int = 0
 
@@ -184,8 +184,6 @@ def increment(iterations: int) -> None:
 
 
 if __name__ == "__main__":
-    print(gil_info())
-
     iters = 50
     run_threads(increment, (iters,))
     report("threaded", counter, c.NUM_THREADS * iters)

@@ -36,7 +36,7 @@ uv sync
 ## Architecture
 
 - **`constants.py`** — Shared constants: `NUM_THREADS`, `ITERATIONS`, `EXPECTED`, `FAST_SWITCH_INTERVAL`. Imported as `import constants as c`.
-- **`gil_utils.py`** — Utility imported by all demo scripts; detects `"free-threading"` in `sys.version` and prints whether GIL is active.
+- **`utils.py`** — Helpers imported by demo scripts: `show`, `report`, `run_threads`.
 - **`counter_race.py`** — Threads increment a shared `counter` with no synchronization. With GIL: always correct. Without GIL: race condition produces incorrect results.
 - **`counter_lock.py`** — Same as `counter_race.py` but wraps `counter += 1` in a `threading.Lock()`. Correct under both builds.
 - **`counter_actor.py`** — Actor model: the counter lives on a single thread that processes "inc" messages from a `queue.Queue` mailbox. Workers send messages but never touch the counter, so no lock is needed under either build.

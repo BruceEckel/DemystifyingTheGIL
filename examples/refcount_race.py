@@ -11,10 +11,11 @@ Without the GIL, threads interleave freely: negative → premature free (use-aft
 positive → memory leak.
 """
 
+import sys
 from concurrent.futures import ThreadPoolExecutor
 
 import constants as c
-from gil_utils import gil_info, show
+from utils import show
 
 
 class TrackedObject:
@@ -22,7 +23,7 @@ class TrackedObject:
 
 
 obj: TrackedObject = TrackedObject()
-free_threading = "No GIL" in gil_info()
+free_threading = "free-threading" in sys.version
 
 
 def inc_refcount() -> None:
@@ -38,8 +39,6 @@ def dec_refcount() -> None:
 
 
 if __name__ == "__main__":
-    print(gil_info())
-
     with ThreadPoolExecutor(max_workers=2) as pool:
         pool.submit(inc_refcount)
         pool.submit(dec_refcount)

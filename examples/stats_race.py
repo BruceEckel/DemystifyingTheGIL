@@ -10,7 +10,7 @@ a wrong answer, or crashes with ZeroDivisionError if count lags total.
 import sys
 
 import constants as c
-from gil_utils import gil_info, run_threads, show
+from utils import run_threads, show
 
 
 class Stats:
@@ -71,7 +71,6 @@ def report(label: str) -> None:
 
 
 if __name__ == "__main__":
-    print(gil_info())
     run_threaded()
     report("threaded")
     run_threaded_fast_switch()

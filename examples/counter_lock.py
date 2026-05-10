@@ -6,7 +6,7 @@ Using a lock to protect non-atomic operation.
 import threading
 
 import constants as c
-from gil_utils import gil_info, report, run_threads
+from utils import report, run_threads
 
 counter: int = 0  # Shared state
 
@@ -21,7 +21,5 @@ def increment(iterations: int) -> None:
 
 
 if __name__ == "__main__":
-    print(gil_info())
-
     run_threads(increment, (c.ITERATIONS,))
     report("threaded", counter, c.EXPECTED)
