@@ -2,7 +2,6 @@
 import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any
 
 import constants as c
 
@@ -46,8 +45,28 @@ def report(label: str, actual: int, expected: int) -> None:
     show(label, f"{actual:>9,}{extra}", ok)
 
 
-def run_threads(target: Callable[..., None], args: tuple[Any, ...] = ()) -> None:
+def run_threads(worker: Callable[[], None]) -> None:
     # Structured concurrency:
     with ThreadPoolExecutor(max_workers=c.NUM_THREADS) as pool:
         for _ in range(c.NUM_THREADS):
-            pool.submit(target, *args)
+            pool.submit(worker)
+
+
+def run_and_report(
+    label: str,
+    worker: Callable[[], None],
+    value: Callable[[], int],
+    expected: int = c.EXPECTED,
+) -> None:
+    run_threads(worker)
+    report(label, value(), expected)
+
+
+def run_and_show(
+    label: str,
+    worker: Callable[[], None],
+    result: Callable[[], tuple[str, bool]],
+) -> None:
+    run_threads(worker)
+    status, ok = result()
+    show(label, status, ok)

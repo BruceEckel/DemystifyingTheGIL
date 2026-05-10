@@ -12,7 +12,7 @@ import sys
 import threading
 
 import constants as c
-from utils import run_threads, show
+from utils import run_and_show
 
 
 class ConnectionPool:
@@ -42,29 +42,20 @@ class ConnectionPool:
         cls._barrier = threading.Barrier(c.NUM_THREADS)
 
 
-def run_threaded() -> None:
+def status() -> tuple[str, bool]:
+    n = len(ConnectionPool._creations)
+    ok = n == 1
+    return ("created once" if ok else f"created {n} times", ok)
+
+
+if __name__ == "__main__":
     ConnectionPool.reset()
-    run_threads(ConnectionPool.get)
+    run_and_show("threaded", ConnectionPool.get, status)
 
-
-def run_threaded_fast_switch() -> None:
     ConnectionPool.reset()
     original = sys.getswitchinterval()
     sys.setswitchinterval(c.FAST_SWITCH_INTERVAL)
     try:
-        run_threads(ConnectionPool.get)
+        run_and_show("fast switch", ConnectionPool.get, status)
     finally:
         sys.setswitchinterval(original)
-
-
-def report(label: str) -> None:
-    n = len(ConnectionPool._creations)
-    ok = n == 1
-    show(label, "created once" if ok else f"created {n} times", ok)
-
-
-if __name__ == "__main__":
-    run_threaded()
-    report("threaded")
-    run_threaded_fast_switch()
-    report("fast switch")

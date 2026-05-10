@@ -10,7 +10,7 @@ a wrong answer, or crashes with ZeroDivisionError if count lags total.
 import sys
 
 import constants as c
-from utils import run_threads, show
+from utils import run_and_show
 
 
 class Stats:
@@ -39,39 +39,29 @@ def reset() -> None:
     stats.total = 0.0
 
 
-def run_threaded() -> None:
+def status() -> tuple[str, bool]:
+    count_ok = stats.count == c.EXPECTED
+    total_ok = stats.total == c.EXPECTED
+    match (count_ok, total_ok):
+        case (True, True):
+            s = f"count {stats.count:,}"
+        case (False, True):
+            s = f"count {stats.count:,}  c.EXPECTED {c.EXPECTED:,}"
+        case (True, False):
+            s = f"total {stats.total:,.0f}  c.EXPECTED {c.EXPECTED:,}"
+        case (False, False):
+            s = f"count {stats.count:,}, total {stats.total:,.0f}  c.EXPECTED {c.EXPECTED:,}"
+    return s, count_ok and total_ok
+
+
+if __name__ == "__main__":
     reset()
-    run_threads(worker)
+    run_and_show("threaded", worker, status)
 
-
-def run_threaded_fast_switch() -> None:
     reset()
     original = sys.getswitchinterval()
     sys.setswitchinterval(c.FAST_SWITCH_INTERVAL)
     try:
-        run_threads(worker)
+        run_and_show("fast switch", worker, status)
     finally:
         sys.setswitchinterval(original)
-
-
-def report(label: str) -> None:
-    count_ok = stats.count == c.EXPECTED
-    total_ok = stats.total == c.EXPECTED
-    ok = count_ok and total_ok
-    match (count_ok, total_ok):
-        case (True, True):
-            status = f"count {stats.count:,}"
-        case (False, True):
-            status = f"count {stats.count:,}  c.EXPECTED {c.EXPECTED:,}"
-        case (True, False):
-            status = f"total {stats.total:,.0f}  c.EXPECTED {c.EXPECTED:,}"
-        case (False, False):
-            status = f"count {stats.count:,}, total {stats.total:,.0f}  c.EXPECTED {c.EXPECTED:,}"
-    show(label, status, ok)
-
-
-if __name__ == "__main__":
-    run_threaded()
-    report("threaded")
-    run_threaded_fast_switch()
-    report("fast switch")

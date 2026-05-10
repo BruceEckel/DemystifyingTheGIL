@@ -31,11 +31,6 @@ def counter_process(
     out_channel.put(count)
 
 
-def worker(in_channel: queue.Queue[object], iterations: int) -> None:
-    for _ in range(iterations):
-        in_channel.put("inc")
-
-
 if __name__ == "__main__":
     in_channel: queue.Queue[object] = queue.Queue()
     out_channel: queue.Queue[int] = queue.Queue()
@@ -45,7 +40,11 @@ if __name__ == "__main__":
     )
     counter.start()
 
-    run_threads(worker, (in_channel, c.ITERATIONS))
+    def worker() -> None:
+        for _ in range(c.ITERATIONS):
+            in_channel.put("inc")
+
+    run_threads(worker)
 
     in_channel.put(DONE)
     counter.join()

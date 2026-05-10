@@ -15,7 +15,7 @@ Without the GIL, the race is continuous and the result is wrong.
 import sys
 
 import constants as c
-from utils import report, run_threads
+from utils import report, run_and_report
 
 counter: int = 0
 
@@ -35,12 +35,13 @@ def run_sequential() -> None:
     counter = 0
     for _ in range(c.EXPECTED):
         counter = pure(counter)
+    report("sequential", counter, c.EXPECTED)
 
 
 def run_threaded() -> None:
     global counter
     counter = 0
-    run_threads(worker)
+    run_and_report("threaded", worker, lambda: counter)
 
 
 def run_threaded_fast_switch() -> None:
@@ -49,15 +50,12 @@ def run_threaded_fast_switch() -> None:
     original = sys.getswitchinterval()
     sys.setswitchinterval(c.FAST_SWITCH_INTERVAL)
     try:
-        run_threads(worker)
+        run_and_report("fast switch", worker, lambda: counter)
     finally:
         sys.setswitchinterval(original)
 
 
 if __name__ == "__main__":
     run_sequential()
-    report("sequential", counter, c.EXPECTED)
     run_threaded()
-    report("threaded", counter, c.EXPECTED)
     run_threaded_fast_switch()
-    report("fast switch", counter, c.EXPECTED)

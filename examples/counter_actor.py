@@ -34,15 +34,15 @@ class CounterActor:
                 self.count += 1
 
 
-def worker(mailbox: queue.Queue[object], iterations: int) -> None:
-    for _ in range(iterations):
-        mailbox.put("inc")
-
-
 if __name__ == "__main__":
     actor = CounterActor()
     actor.start()
-    run_threads(worker, (actor.mailbox, c.ITERATIONS))
+
+    def worker() -> None:
+        for _ in range(c.ITERATIONS):
+            actor.mailbox.put("inc")
+
+    run_threads(worker)
     actor.stop()
 
     report("actor", actor.count, c.EXPECTED)
