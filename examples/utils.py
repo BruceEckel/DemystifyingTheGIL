@@ -17,18 +17,6 @@ class Timer:
         self.elapsed = time.perf_counter() - self._start
 
 
-def run_in_threads(
-    worker: Callable[[], None],
-    value: Callable[[], int],
-    threads: int = 10,
-) -> None:
-    """Run worker in threads; print value() and elapsed seconds."""
-    with Timer() as t, ThreadPoolExecutor(max_workers=threads) as pool:
-        for _ in range(threads):
-            pool.submit(worker)
-    print(f"{value():,}  ({t.elapsed:.2f}s)")
-
-
 _GREEN = "\033[32m"
 _RED = "\033[31m"
 _RESET = "\033[0m"
@@ -40,30 +28,35 @@ def show(label: str, status: str, ok: bool, elapsed: float | None = None) -> Non
     print(f"  {label:<12} {color}{status}{_RESET}{timing}")
 
 
+def value_status(actual: int, expected: int) -> tuple[str, bool]:
+    ok = actual == expected
+    extra = f"  lost {expected - actual:,}" if not ok else ""
+    return f"{actual:>9,}{extra}", ok
+
+
 def report(
     label: str, actual: int, expected: int, elapsed: float | None = None
 ) -> None:
-    ok = actual == expected
-    extra = f"  lost {expected - actual:,}" if not ok else ""
-    show(label, f"{actual:>9,}{extra}", ok, elapsed)
+    show(label, *value_status(actual, expected), elapsed)
 
 
-def run_threads(worker: Callable[[], None]) -> None:
-    # Structured concurrency:
-    with ThreadPoolExecutor(max_workers=c.NUM_THREADS) as pool:
-        for _ in range(c.NUM_THREADS):
+def run_threads(
+    worker: Callable[[], None], threads: int = c.NUM_THREADS
+) -> None:
+    with ThreadPoolExecutor(max_workers=threads) as pool:
+        for _ in range(threads):
             pool.submit(worker)
 
 
-def run_and_report(
-    label: str,
+def run_in_threads(
     worker: Callable[[], None],
     value: Callable[[], int],
-    expected: int = c.EXPECTED,
+    threads: int = 10,
 ) -> None:
+    """Run worker in threads; print value() and elapsed seconds."""
     with Timer() as t:
-        run_threads(worker)
-    report(label, value(), expected, t.elapsed)
+        run_threads(worker, threads)
+    print(f"{value():,}  ({t.elapsed:.2f}s)")
 
 
 def run_and_show(
@@ -75,3 +68,12 @@ def run_and_show(
         run_threads(worker)
     status, ok = result()
     show(label, status, ok, t.elapsed)
+
+
+def run_and_report(
+    label: str,
+    worker: Callable[[], None],
+    value: Callable[[], int],
+    expected: int = c.EXPECTED,
+) -> None:
+    run_and_show(label, worker, lambda: value_status(value(), expected))
