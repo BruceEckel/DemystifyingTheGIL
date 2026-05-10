@@ -9,7 +9,7 @@ EXAMPLES = counter_race.py counter_lock.py counter_actor.py two_counters.py cont
 GIL_TARGETS   = $(addprefix gil-,$(EXAMPLES))
 NOGIL_TARGETS = $(addprefix nogil-,$(EXAMPLES))
 
-.PHONY: all gil nogil overhead help $(EXAMPLES) $(GIL_TARGETS) $(NOGIL_TARGETS)
+.PHONY: all gil nogil overhead help $(EXAMPLES)
 
 .DEFAULT_GOAL := help
 
