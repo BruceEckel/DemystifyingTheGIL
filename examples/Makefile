@@ -17,7 +17,7 @@ MODE_FLAG       = $(filter gil nogil,$(MAKECMDGOALS))
 SCRIPT_GOAL     = $(filter $(EXAMPLES) $(DOT_EXAMPLES),$(MAKECMDGOALS))
 MODE_AND_SCRIPT = $(if $(MODE_FLAG),$(SCRIPT_GOAL))
 
-.PHONY: all gil nogil overhead help list $(EXAMPLES)
+.PHONY: all gil nogil overhead help list present $(EXAMPLES)
 
 .DEFAULT_GOAL := help
 
@@ -27,6 +27,7 @@ help:
 	@echo "  make nogil                -- run all examples without the GIL"
 	@echo "  make all                  -- run both"
 	@echo "  make overhead             -- compare single-threaded performance across builds"
+	@echo "  make present              -- launch the Marp slide preview"
 	@echo "  make list                 -- list all <script.py> options"
 	@echo "  make <script.py>          -- run one example with GIL then no GIL (.\ prefix ok)"
 	@echo "  make gil <script.py>      -- run one example with GIL only"
@@ -47,6 +48,9 @@ overhead:
 
 list:
 	@$(foreach e,$(EXAMPLES),echo $(e);)
+
+present:
+	marp --preview ../presentation/outline.md
 
 ifneq ($(MODE_AND_SCRIPT),)
 # Mode flag plus script: flag selects the build, script runs once in that mode.

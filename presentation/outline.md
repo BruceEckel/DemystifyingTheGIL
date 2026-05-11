@@ -1,16 +1,20 @@
 ---
+marp: true
 title: Demystifying The GIL
 author: Bruce Eckel
-theme: dark
+theme: default
 ---
 
 # Demystifying The GIL
+(Global Interpreter Lock)
+Bruce Eckel
 
-Race conditions, free-threaded Python, and why your threads lied to you
-
-PyCon 2026
+github.com/BruceEckel/DemystifyingTheGIL
 
 ---
+
+
+
 
 # Demo With GIL
 
