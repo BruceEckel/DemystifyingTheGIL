@@ -454,6 +454,46 @@ This is the free-threaded build (`3.13t`, `3.14t`) that meets the single-threade
 It is still opt-in. It also changes the contract that extension authors have
 relied on for three decades (see `8-TheBrokenContract.md`).
 
+## Where Free-Threading (FT) Helps
+
+FT wins when threads spend most of their time on work they don't share,
+and any contention is bounded. The ideal is **embarrassingly parallel**
+work: completely independent threads, no shared state. `cpu_parallel.py`
+is the simplest case: each thread does its own CPU-bound loop and never
+touches the others' data.
+
+Real problems often look shared at first. The patterns below either
+restructure a shared problem into the embarrassingly-parallel form, or
+limit the remaining sharing enough that FT still wins:
+
+- **Sharded accumulators.** Restructure a shared-counter problem into
+  embarrassingly-parallel form: each thread accumulates locally, then
+  partial results are merged once. Word counting with per-thread
+  `Counter`s is the canonical example: contention is one merge per
+  thread, not one per word. `counter_sharded.py` is `counter_race.py`'s
+  problem restructured this way.
+- **Coarse-grained locking.** When sharing can't be eliminated, hold
+  the lock for a chunk of work instead of an item. If each acquisition
+  covers 1000 ops, lock overhead is negligible.
+- **Read-mostly shared state.** Caches, configuration, lookup tables.
+  Concurrent dict reads are mostly lock-free in FT; the cost only
+  appears on writes.
+- **Pipeline parallelism (CSP-style).** Stages connected by queues. See
+  `counter_csp.py`: the workers and counter run in parallel, with the
+  queue as the only shared point. If each worker did real CPU work
+  before sending, the speedup would be real.
+
+The general rule from PEP 703: minimize shared mutable state, and hold
+locks for as little time as possible. The lock cost matters in proportion
+to:
+
+$$\frac{\text{acquisitions} \times \text{cost per acquisition}}{\text{useful work between acquisitions}}$$
+
+`the_camels_nose.py` is the worst case because the denominator is
+essentially zero: every iteration acquires the lock, and there is no work
+outside it. A version that did even 100µs of independent work between
+increments would already show FT speedup.
+
 ## Summary
 
 The GIL is what you get when you choose refcounting, expose it through a

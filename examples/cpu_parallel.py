@@ -1,7 +1,7 @@
 # cpu_parallel.py
 """
 CPU-bound, embarrassingly parallel work with no shared state.
-With the GIL: threads serialize, runtime ~= sequential.
+With the GIL: threads serialize, time ~= sequential.
 Without the GIL: threads run on separate cores, near-linear speedup.
 """
 
