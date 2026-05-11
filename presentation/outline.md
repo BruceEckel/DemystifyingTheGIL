@@ -1,10 +1,18 @@
-## Title
+---
+title: Demystifying The GIL
+author: Bruce Eckel
+theme: dark
+---
 
-- **Demystifying The GIL**
-- Race conditions, free-threaded Python, and why your threads lied to you
-- PyCon 2026
+# Demystifying The GIL
 
-## Demo With GIL
+Race conditions, free-threaded Python, and why your threads lied to you
+
+PyCon 2026
+
+---
+
+# Demo With GIL
 
 - 8 threads, each incrementing a shared counter 100,000 times
 - Expected result: **800,000**
@@ -16,7 +24,9 @@ $ python counter_race.py
 - Result: **800,000** ✓
 - The claim holds... or does it?
 
-## Demo Without GIL
+---
+
+# Demo Without GIL
 
 ```
 $ uv run --python 3.14t counter_race.py
@@ -26,7 +36,9 @@ $ uv run --python 3.14t counter_race.py
 - Result: NOT **800,000** ✗ (varies every run)
 - The race condition was always there — the GIL was hiding it
 
-## What Is the GIL?
+---
+
+# What Is the GIL?
 
 - A *lock* (aka *mutex*) protects shared memory from simultaneous modification.
 - *Global* + *interpreter*: There's only one protecting the shared memory for the entire interpreter
@@ -34,7 +46,9 @@ $ uv run --python 3.14t counter_race.py
 - A CPython implementation detail; other implementations (Jython, PyPy-STM, which uses Software Transactional Memory) don't have it
 - Since Python 1.5 (1997)
 
-## What Shared Memory is Protected?
+---
+
+# What Shared Memory is Protected?
 
 - **Reference counting** — `ob_refcnt` inc/dec must be atomic; GIL makes it so
 - **Memory allocator** — `PyMem_Malloc` / `PyObject_New` are not thread-safe without it
@@ -46,7 +60,9 @@ $ uv run --python 3.14t counter_race.py
 - **`sys.settrace` / profiling** — frame inspection assumes serialized execution
 - **Accidental thread safety** — your code, not written for concurrency, works anyway
 
-## `counter += 1` Is Not Atomic
+---
+
+# `counter += 1` Is Not Atomic
 
 ```
 LOAD_GLOBAL   counter       # read value from memory
@@ -58,7 +74,9 @@ STORE_GLOBAL  counter       # write result back
 - Two threads read the same value → both increment → one write is lost
 - The classic **read-modify-write** race condition
 
-## Why It "Works" With the GIL
+---
+
+# Why It "Works" With the GIL
 
 - The GIL is released only at predictable points — every N bytecodes (the "check interval")
 - Those 3 bytecodes are short enough that the GIL often isn't released between them
@@ -66,7 +84,9 @@ STORE_GLOBAL  counter       # write result back
 - Even with the GIL, long enough critical sections *can* be interrupted
 - You've been getting away with it, not writing correct code
 
-## The Fix: Explicit Locking
+---
+
+# The Fix: Explicit Locking
 
 ```python
 lock = threading.Lock()
@@ -81,7 +101,9 @@ def increment(iterations):
 - `counter_lock.py`: correct on **both** Python 3.14 (GIL) and Python 3.14t (no GIL)
 - The lock makes the intent explicit — don't rely on interpreter accidents
 
-## Python 3.14t — Free-Threaded Build
+---
+
+# Python 3.14t — Free-Threaded Build
 
 - PEP 703: "Making the Global Interpreter Lock Optional" (Sam Gross, 2022)
 - Experimental since Python 3.13 — install the `t` variant
@@ -100,10 +122,16 @@ uv python install 3.14t
 uv run --python 3.14t script.py
 ```
 
-## Act 3: The Coming Surprise
-<!-- ~10 min -->
+---
 
-## The Iceberg
+# Act 3: The Coming Surprise
+
+Note:
+~10 minutes for this section.
+
+---
+
+# The Iceberg
 
 - You rewrote your code. You added locks. Your tests pass under 3.14t.
 - **But you didn't write most of the code you run.**
@@ -111,7 +139,9 @@ uv run --python 3.14t script.py
 - Most library authors didn't know they needed to think about thread safety
 - The GIL was their lock — silently, invisibly, without their knowledge
 
-## Library Patterns That Will Break
+---
+
+# Library Patterns That Will Break
 
 Code that is "accidentally thread-safe" today:
 
@@ -122,7 +152,9 @@ Code that is "accidentally thread-safe" today:
 - **Logging handlers** — writing to shared buffers or files
 - **C extensions** — any extension that touches Python objects without the GIL held
 
-## A Concrete Example
+---
+
+# A Concrete Example
 
 A common pattern in library code today:
 
@@ -138,11 +170,14 @@ def lookup(name):
 ```
 
 Under 3.14t with concurrent `register()` calls:
+
 - Two threads resize the dict simultaneously → internal structure corruption
 - Or one thread iterates while another inserts → `RuntimeError: dictionary changed size`
 - **The code didn't change. The behavior did.**
 
-## Why This Is Hard to Find
+---
+
+# Why This Is Hard to Find
 
 - Race conditions are **non-deterministic** — the bug may appear 1 in 10,000 runs
 - Your test suite runs sequentially or with low concurrency → green CI
@@ -150,7 +185,9 @@ Under 3.14t with concurrent `register()` calls:
 - Python 3.14t makes races *more likely* but still not certain
 - Luckily: 3.14t is a correctness checker you can run today
 
-## What You Should Do Now
+---
+
+# What You Should Do Now
 
 1. **Audit shared mutable state** — anything touched by more than one thread
 2. **Run your test suite under 3.14t** — it will expose latent races that the GIL was hiding
@@ -158,7 +195,9 @@ Under 3.14t with concurrent `register()` calls:
 4. **Prefer immutable data** — objects created once and never mutated are safe
 5. **Check your dependencies** — file issues against libraries that don't declare thread safety
 
-## The Payoff
+---
+
+# The Payoff
 
 Why bother? Because without the GIL:
 
@@ -168,7 +207,9 @@ Why bother? Because without the GIL:
 - The ecosystem has 30 years of battle-tested concurrency primitives to use
 - Libraries that do the work correctly will be faster and more scalable
 
-## The Rule
+---
+
+# The Rule
 
 > If two threads touch the same data and at least one of them writes,
 > you need a lock — **GIL or not**.
@@ -177,7 +218,9 @@ Why bother? Because without the GIL:
 - The GIL made it optional in CPython — that era is ending
 - Code that follows this rule works correctly on every Python implementation, today and tomorrow
 
-## Resources & Q&A
+---
+
+# Resources & Q&A
 
 - **PEP 703** — Making the Global Interpreter Lock Optional (Sam Gross)
 - **nogil project** — Sam Gross's original fork that became PEP 703
@@ -189,4 +232,6 @@ $ python counter_race.py                    # GIL: always 800,000
 $ uv run --python 3.14t counter_race.py    # no GIL: broken
 $ uv run --python 3.14t counter_lock.py    # no GIL: fixed
 ```
-*18 slides · ~30 minutes · 1.5–2 min/slide*
+
+Note:
+18 slides · ~30 minutes · 1.5–2 min/slide
