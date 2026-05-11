@@ -2,8 +2,11 @@
 import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
+from typing import ParamSpec
 
 import constants as c
+
+_P = ParamSpec("_P")
 
 
 class Timer:
@@ -15,6 +18,15 @@ class Timer:
 
     def __exit__(self, *_: object) -> None:
         self.elapsed = time.perf_counter() - self._start
+
+
+def timed(fn: Callable[_P, object]) -> Callable[_P, float]:
+    def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> float:
+        with Timer() as t:
+            fn(*args, **kwargs)
+        return t.elapsed
+
+    return wrapper
 
 
 _GREEN = "\033[32m"

@@ -1,8 +1,8 @@
 # region setup
 # cpu_parallel.py
-import time
 from concurrent.futures import ThreadPoolExecutor
 import constants as c
+from utils import timed
 N: int = 5_000_000
 
 def work(n: int) -> None:
@@ -14,27 +14,25 @@ def work(n: int) -> None:
 
 # region seq_comparison
 
-def time_sequential() -> float:
-    start = time.perf_counter()
+@timed
+def sequential():
     for _ in range(c.NUM_THREADS):
         work(N)
-    return time.perf_counter() - start
 
 # endregion seq_comparison
 # region par_comparison
 
-def time_threaded() -> float:
-    start = time.perf_counter()
+@timed
+def threaded():
     with ThreadPoolExecutor(max_workers=c.NUM_THREADS) as pool:
         for _ in range(c.NUM_THREADS):
             pool.submit(work, N)
-    return time.perf_counter() - start
 
 # endregion par_comparison
 
 # region run_it
-seq = time_sequential()
-par = time_threaded()
+seq = sequential()
+par = threaded()
 print(f"  sequential: {seq:6.2f}s")
 print(f"  threaded:   {par:6.2f}s")
 print(f"  speedup:    {seq / par:6.2f}x")

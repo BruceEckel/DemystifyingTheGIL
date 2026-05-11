@@ -35,8 +35,9 @@ Caveats:
     cleanly, bump ITER below.
 """
 
-import time
 from collections.abc import Callable
+
+from utils import timed
 
 ITER: int = 20_000_000
 REPEATS: int = 7  # best-of-N to reduce noise
@@ -115,14 +116,7 @@ TASKS: list[tuple[str, Callable[[], None]]] = [
 
 
 def time_task(fn: Callable[[], None]) -> float:
-    best = float("inf")
-    for _ in range(REPEATS):
-        start = time.perf_counter()
-        fn()
-        elapsed = time.perf_counter() - start
-        if elapsed < best:
-            best = elapsed
-    return best
+    return min(timed(fn)() for _ in range(REPEATS))
 
 
 if __name__ == "__main__":
