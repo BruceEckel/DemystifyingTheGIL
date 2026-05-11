@@ -6,38 +6,44 @@ theme: default
 
 # Demystifying The GIL
 (Global Interpreter Lock)
+
 Bruce Eckel
 
 github.com/BruceEckel/DemystifyingTheGIL
 
 ---
 
-
-
-
-# Demo With GIL
-
-- 8 threads, each incrementing a shared counter 100,000 times
-- Expected result: **800,000**
-
-```
-$ python counter_race.py
-```
-
-- Result: **800,000** ✓
-- The claim holds... or does it?
+# Making a Dent in the GIL
 
 ---
 
-# Demo Without GIL
+# The GIL Landscape, Before & After
+
+---
+
+# Dunning-Kruger Strikes Again!
+
+<<< ../examples/concurrency_is_easy.py
+
+---
+
+# Sipping from the Concurrency Firehose
+
+<<< ../examples/the_camels_nose.py
+
+---
+
+# `counter += 1` Is Not Atomic
 
 ```
-$ uv run --python 3.14t counter_race.py
+LOAD_GLOBAL   counter       # read value from memory
+BINARY_OP     +  1          # compute counter + 1
+STORE_GLOBAL  counter       # write result back
 ```
 
-- Same code. Same machine. Different Python build.
-- Result: NOT **800,000** ✗ (varies every run)
-- The race condition was always there — the GIL was hiding it
+- A context switch can happen **between any two of these steps**
+- Two threads read the same value → both increment → one write is lost
+- The classic **read-modify-write** race condition
 
 ---
 
@@ -65,19 +71,6 @@ $ uv run --python 3.14t counter_race.py
 
 ---
 
-# `counter += 1` Is Not Atomic
-
-```
-LOAD_GLOBAL   counter       # read value from memory
-BINARY_OP     +  1          # compute counter + 1
-STORE_GLOBAL  counter       # write result back
-```
-
-- A context switch can happen **between any two of these steps**
-- Two threads read the same value → both increment → one write is lost
-- The classic **read-modify-write** race condition
-
----
 
 # Why It "Works" With the GIL
 
@@ -89,49 +82,9 @@ STORE_GLOBAL  counter       # write result back
 
 ---
 
-# The Fix: Explicit Locking
-
-```python
-lock = threading.Lock()
-
-def increment(iterations):
-    global counter
-    for _ in range(iterations):
-        with lock:          # protect the non-atomic operation
-            counter += 1
-```
-
-- `counter_lock.py`: correct on **both** Python 3.14 (GIL) and Python 3.14t (no GIL)
-- The lock makes the intent explicit — don't rely on interpreter accidents
-
----
-
 # Python 3.14t — Free-Threaded Build
 
-- PEP 703: "Making the Global Interpreter Lock Optional" (Sam Gross, 2022)
-- Experimental since Python 3.13 — install the `t` variant
 - GIL disabled by default; threads run in **true parallel** on multiple cores
-- Detect in code:
-
-```python
-import sys
-free_threading = "free-threading" in sys.version
-```
-
-- Install:
-
-```
-uv python install 3.14t
-uv run --python 3.14t script.py
-```
-
----
-
-# Act 3: The Coming Surprise
-
-<!--
-~10 minutes for this section.
--->
 
 ---
 
@@ -221,22 +174,3 @@ Why bother? Because without the GIL:
 - This has always been true
 - The GIL made it optional in CPython — that era is ending
 - Code that follows this rule works correctly on every Python implementation, today and tomorrow
-
----
-
-# Resources & Q&A
-
-- **PEP 703** — Making the Global Interpreter Lock Optional (Sam Gross)
-- **nogil project** — Sam Gross's original fork that became PEP 703
-- **python.org/downloads** — install Python 3.14t today
-- **This repo** — `counter_race.py`, `counter_lock.py`, `refcount_race.py`
-
-```
-$ python counter_race.py                    # GIL: always 800,000
-$ uv run --python 3.14t counter_race.py    # no GIL: broken
-$ uv run --python 3.14t counter_lock.py    # no GIL: fixed
-```
-
-<!--
-18 slides · ~30 minutes · 1.5–2 min/slide
--->

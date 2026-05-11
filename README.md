@@ -94,3 +94,4 @@ make present   # launch the Slidev slide preview, with auto-reload on edits
 7. **Refcounts and Extensions**: why the GIL is bound up with reference counting and the C extension ABI
 8. **The Broken Contract**: what the free-threaded build asks of extension authors and library maintainers
 9. **Inside Free-Threading**: biased and deferred refcounting, immortal objects, per-object locks
+10. **Appendix: Python and the OS**: Python threads vs. OS threads, the main thread, blocking calls, memory and stack, scheduling, fork/spawn, subinterpreters
