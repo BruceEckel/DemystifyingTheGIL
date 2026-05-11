@@ -46,7 +46,28 @@ Install the Slidev CLI globally to view or edit the slides:
 npm i -g @slidev/cli@0.50.0
 ```
 
-> Note that version 50 is required to allow highlighting; later version break highlighting
+> Note that version 50 is required to allow highlighting; later versions break highlighting
+
+To get the most recent version:
+
+```
+Install the latest globally:
+
+npm install -g @slidev/cli@latest @slidev/theme-default@latest
+
+Or, to test without overwriting your current global install, run latest directly via npx:
+
+cd presentation
+npx @slidev/cli@latest DemystifyingTheGIL.md
+
+Check the version after:
+
+slidev --version
+
+Or look at what's currently published:
+
+npm info @slidev/cli version
+```
 
 ## Using the Makefile
 
