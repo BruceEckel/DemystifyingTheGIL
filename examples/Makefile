@@ -25,7 +25,7 @@ help:
 	@echo "  make gil                  -- run all examples with the GIL"
 	@echo "  make nogil                -- run all examples without the GIL"
 	@echo "  make all                  -- run both"
-	@echo "  make overhead             -- compare single-threaded perf across builds"
+	@echo "  make overhead             -- compare single-threaded performance across builds"
 	@echo "  make <script.py>          -- run one example with GIL then no GIL (.\ prefix ok)"
 	@echo "  make gil <script.py>      -- run one example with GIL only"
 	@echo "  make nogil <script.py>    -- run one example without the GIL only"
