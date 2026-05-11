@@ -38,3 +38,12 @@ html.dark .shiki span {
   line-height: 1.2;
   margin-bottom: 0.4em;
 }
+
+.slidev-layout table {
+  font-size: 1.1em;
+}
+
+.slidev-layout td,
+.slidev-layout th {
+  padding: 0.1em 0.4em;
+}

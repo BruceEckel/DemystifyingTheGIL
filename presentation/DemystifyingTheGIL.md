@@ -2,26 +2,25 @@
 title: Demystifying The GIL
 author: Bruce Eckel
 theme: default
+navigation: false
+selectable: false
+drawers: false
+contextMenu: false
+info: false
 css: style.css
 ---
 
-# Demystifying The GIL
-(Global Interpreter Lock)
-
-Bruce Eckel
-
-github.com/BruceEckel/DemystifyingTheGIL
-
+---
+layout: image
+image: TitleSlide.png
+---
+---
+layout: image
+image: TheGILLandscape.png
 ---
 
-# Making a Dent in the GIL
-
 ---
-
-# The GIL Landscape, Before & After
-
 ---
-
 # Dunning-Kruger Strikes Again!
 
 <<< ../examples/concurrency_is_easy.py
@@ -82,9 +81,9 @@ STORE_GLOBAL  counter       # write result back
 - **CPython internals** — module `__dict__`, type objects, interned strings are unprotected
 - **Import system** — `sys.modules` lookups and insertions during `import`
 - **Signal handling** — only the main thread handles signals; GIL ensures it gets scheduled
-- **C extensions** — most extensions were written assuming single-threaded bytecode execution
+- **C extensions** — most extensions assume single-threaded bytecode execution
 - **`sys.settrace` / profiling** — frame inspection assumes serialized execution
-- **Accidental thread safety** — your code, not written for concurrency, works anyway
+- **Accidental thread safety** — code not written for concurrency works anyway
 
 ---
 
@@ -95,13 +94,7 @@ STORE_GLOBAL  counter       # write result back
 - Those 3 bytecodes are short enough that the GIL often isn't released between them
 - But this is **not guaranteed** — it's timing luck
 - Even with the GIL, long enough critical sections *can* be interrupted
-- You've been getting away with it, not writing correct code
-
----
-
-# Python 3.14t — Free-Threaded Build
-
-- GIL disabled by default; threads run in **true parallel** on multiple cores
+- You've been getting away with incorrect code
 
 ---
 
@@ -111,7 +104,7 @@ STORE_GLOBAL  counter       # write result back
 - **But you didn't write most of the code you run.**
 - Every library you import was written under the GIL assumption
 - Most library authors didn't know they needed to think about thread safety
-- The GIL was their lock — silently, invisibly, without their knowledge
+- The GIL was their lock — silent & invisible, without their knowledge
 
 ---
 
@@ -191,3 +184,21 @@ Why bother? Because without the GIL:
 - This has always been true
 - The GIL made it optional in CPython — that era is ending
 - Code that follows this rule works correctly on every Python implementation, today and tomorrow
+
+---
+
+# No-GIL Overhead in 3.14
+
+Cost of operations without using concurrency
+
+| task              | GIL (s) | FT (s) | delta  |
+|-------------------|---------|--------|--------|
+| int +=            | 0.4034  | 0.4604 | +14.1% |
+| obj alloc         | 0.2331  | 0.2823 | +21.1% |
+| tuple new         | 0.2371  | 0.2621 | +10.5% |
+| dict set          | 0.1227  | 0.1455 | +18.6% |
+| list append & pop | 0.0630  | 0.0852 | +35.2% |
+| attr read         | 0.3311  | 0.3898 | +17.7% |
+| func call         | 0.2249  | 0.2479 | +10.2% |
+| str join          | 0.0098  | 0.0106 | +8.2%  |
+| **total**         | **1.6251** | **1.8838** | **+15.9%** |

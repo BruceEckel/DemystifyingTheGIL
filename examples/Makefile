@@ -50,7 +50,7 @@ list:
 	@$(foreach e,$(EXAMPLES),echo $(e);)
 
 present:
-	slidev ../presentation/outline.md
+	slidev ../presentation/DemystifyingTheGIL.md
 
 ifneq ($(MODE_AND_SCRIPT),)
 # Mode flag plus script: flag selects the build, script runs once in that mode.
