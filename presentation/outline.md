@@ -27,12 +27,6 @@ github.com/BruceEckel/DemystifyingTheGIL
 
 ---
 
-# Sipping from the Concurrency Firehose
-
-<<< ../examples/the_camels_nose.py
-
----
-
 # `counter += 1` Is Not Atomic
 
 ```
@@ -43,7 +37,12 @@ STORE_GLOBAL  counter       # write result back
 
 - A context switch can happen **between any two of these steps**
 - Two threads read the same value → both increment → one write is lost
-- The classic **read-modify-write** race condition
+
+---
+
+# Sipping from the Concurrency Firehose
+
+<<< ../examples/the_camels_nose.py{9-11}
 
 ---
 

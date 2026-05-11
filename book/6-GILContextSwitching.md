@@ -130,6 +130,35 @@ iteration, but the GIL only actually releases when the 5ms timer has also
 elapsed. The check point and the timer work together: the check point is *where*
 the GIL can release, and the timer controls *when*.
 
+## What "releasing the GIL" actually means
+
+"The GIL is released" is shorthand for the running thread relinquishing the
+lock so another waiting thread can acquire it and start running Python
+bytecode. The release is the mechanism that makes a thread switch possible;
+whether a switch actually happens depends on whether other Python threads are
+waiting and what the OS scheduler decides.
+
+Two layers of switching coincide here but aren't the same thing:
+
+- **GIL handoff** at the interpreter level: which thread is allowed to execute
+  Python bytecode right now.
+- **OS context switch** at the kernel level: which thread the CPU is actually
+  running.
+
+A GIL release lets a different Python thread take over the interpreter, and
+the OS typically performs a context switch to actually put that thread on a
+CPU. Since Python 3.2, the GIL implementation deliberately waits for another
+thread to grab the lock after release, rather than letting the releaser
+re-take it immediately. This was added to prevent starvation on multicore
+machines, where the releasing thread would often win the re-acquisition race
+against threads waking up on other cores.
+
+In short, "the GIL is released" means: another Python thread now has the
+opportunity to run, and if one is waiting, it will. Under the free-threaded
+build the whole mechanism is gone. Threads execute Python bytecode in
+parallel without any handoff, and only the OS-level context switching
+remains.
+
 ## Cooperative vs. preemptive switching
 
 The most familiar form of context switching is **cooperative**: a lock is

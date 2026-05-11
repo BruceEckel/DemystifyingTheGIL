@@ -1,19 +1,8 @@
 :root {
-    --slidev-code-font-size: 1.2em;
-    --slidev-code-line-height: 1.6;
+  --slidev-code-font-size: 1.2em;
+  --slidev-code-line-height: 1.1;
 }
 
 .slidev-code {
-    background: white !important;
-    color: black !important;
-    line-height: 1.1 !important;
-}
-
-/* Override Shiki syntax highlighting colors */
-.slidev-code .shiki span {
-    color: black !important;
-}
-
-.slidev-code .shiki {
-    background-color: white !important;
+  line-height: 1.1 !important;
 }
