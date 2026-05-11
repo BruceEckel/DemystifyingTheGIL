@@ -27,6 +27,10 @@ image: TheGILLandscape.png
 
 ---
 
+<<< ../examples/utils.py#run_in_threads
+
+---
+
 # Two Problems!
 
 1. Getting the right answer

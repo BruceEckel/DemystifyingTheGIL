@@ -8,9 +8,10 @@ without the GIL, because the counter is never shared.
 
 import queue
 import threading
+from concurrent.futures import ThreadPoolExecutor
 
 import constants as c
-from utils import report, run_threads
+from utils import report
 
 STOP = object()  # Sentinel that tells the actor to shut down.
 
@@ -42,7 +43,9 @@ if __name__ == "__main__":
         for _ in range(c.ITERATIONS):
             actor.mailbox.put("inc")
 
-    run_threads(worker)
+    with ThreadPoolExecutor(max_workers=c.NUM_THREADS) as pool:
+        for _ in range(c.NUM_THREADS):
+            pool.submit(worker)
     actor.stop()
 
     report("actor", actor.count, c.EXPECTED)

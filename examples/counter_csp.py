@@ -13,9 +13,10 @@ channel and the counter just happens to be the reader.
 
 import queue
 import threading
+from concurrent.futures import ThreadPoolExecutor
 
 import constants as c
-from utils import report, run_threads
+from utils import report
 
 DONE = object()  # Sentinel: no more increments will arrive.
 
@@ -44,7 +45,9 @@ if __name__ == "__main__":
         for _ in range(c.ITERATIONS):
             in_channel.put("inc")
 
-    run_threads(worker)
+    with ThreadPoolExecutor(max_workers=c.NUM_THREADS) as pool:
+        for _ in range(c.NUM_THREADS):
+            pool.submit(worker)
 
     in_channel.put(DONE)
     counter.join()
