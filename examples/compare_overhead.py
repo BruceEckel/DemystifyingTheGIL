@@ -14,6 +14,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from single_thread_overhead import REPEATS
+
 SCRIPT = Path(__file__).parent / "single_thread_overhead.py"
 
 BUILDS: list[tuple[str, str]] = [
@@ -24,7 +26,7 @@ BUILDS: list[tuple[str, str]] = [
 
 def run(py: str) -> dict[str, float]:
     result = subprocess.run(
-        ["uv", "run", "--python", py, str(SCRIPT)],
+        ["uv", "run", "--isolated", "--no-project", "--python", py, str(SCRIPT)],
         capture_output=True,
         text=True,
         check=True,
@@ -32,18 +34,19 @@ def run(py: str) -> dict[str, float]:
     times: dict[str, float] = {}
     for line in result.stdout.splitlines():
         parts = line.split()
-        if len(parts) != 2:
+        if len(parts) < 2:
             continue
-        name, value = parts
+        *name_parts, value = parts
         try:
-            times[name] = float(value)
+            times[" ".join(name_parts)] = float(value)
         except ValueError:
             continue
     return times
 
 
 def main() -> None:
-    print("Running both builds (best-of-5 per task; takes a minute or two)...")
+    print("Cost of using FT build without using threads")
+    print(f"Running both builds (best-of-{REPEATS} per task; ~half a minute)...")
     print()
     results: dict[str, dict[str, float]] = {}
     for label, py in BUILDS:
@@ -59,8 +62,8 @@ def main() -> None:
     tasks = list(gil.keys())
 
     print()
-    print(f"{'task':<8} {'GIL (s)':>10} {'FT (s)':>10} {'delta':>10}")
-    print("-" * 42)
+    print(f"{'task':<20} {'GIL (s)':>10} {'FT (s)':>10} {'delta':>10}")
+    print("-" * 54)
     gil_total = 0.0
     ft_total = 0.0
     for task in tasks:
@@ -69,10 +72,10 @@ def main() -> None:
         gil_total += g
         ft_total += f
         delta_pct = (f - g) / g * 100 if g > 0 else 0.0
-        print(f"{task:<8} {g:>10.4f} {f:>10.4f} {delta_pct:>+9.1f}%")
-    print("-" * 42)
+        print(f"{task:<20} {g:>10.4f} {f:>10.4f} {delta_pct:>+9.1f}%")
+    print("-" * 54)
     total_delta = (ft_total - gil_total) / gil_total * 100
-    print(f"{'total':<8} {gil_total:>10.4f} {ft_total:>10.4f} {total_delta:>+9.1f}%")
+    print(f"{'total':<20} {gil_total:>10.4f} {ft_total:>10.4f} {total_delta:>+9.1f}%")
 
 
 if __name__ == "__main__":

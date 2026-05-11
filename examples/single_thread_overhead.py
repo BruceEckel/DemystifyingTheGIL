@@ -13,14 +13,14 @@ build. These tasks stress the paths free-threading changed, so any
 slowdown should show up here.
 
 Tasks (and what each stresses):
-    ints    integer arithmetic with immortal small ints
-    alloc   object creation and destruction (allocator + refcount)
-    tuple   tuple churn (heap alloc + refcount)
-    dict    dict set/get (per-object lock)
-    list    list append/pop (per-object lock + item refcount)
-    attr    attribute reads (type slot and MRO caches)
-    call    function call overhead (frame setup, arg refcounts)
-    string  string list build plus join (alloc + refcount)
+    int +=           integer arithmetic with immortal small ints
+    obj alloc        object creation and destruction (allocator + refcount)
+    tuple new        tuple churn (heap alloc + refcount)
+    dict set         dict set/get (per-object lock)
+    list append & pop  per-object lock + item refcount
+    attr read        attribute reads (type slot and MRO caches)
+    func call        function call overhead (frame setup, arg refcounts)
+    str join         string list build plus join (alloc + refcount)
 
 Caveats:
     Best-of-5 reduces noise but does not eliminate it. Close the browser,
@@ -38,8 +38,8 @@ Caveats:
 import time
 from collections.abc import Callable
 
-ITER: int = 5_000_000
-REPEATS: int = 5  # best-of-N to reduce noise
+ITER: int = 20_000_000
+REPEATS: int = 7  # best-of-N to reduce noise
 
 
 def bench_ints() -> None:
@@ -103,14 +103,14 @@ def bench_string() -> None:
 
 
 TASKS: list[tuple[str, Callable[[], None]]] = [
-    ("ints", bench_ints),
-    ("alloc", bench_alloc),
-    ("tuple", bench_tuple),
-    ("dict", bench_dict),
-    ("list", bench_list),
-    ("attr", bench_attr),
-    ("call", bench_call),
-    ("string", bench_string),
+    ("int +=", bench_ints),
+    ("obj alloc", bench_alloc),
+    ("tuple new", bench_tuple),
+    ("dict set", bench_dict),
+    ("list append & pop", bench_list),
+    ("attr read", bench_attr),
+    ("func call", bench_call),
+    ("str join", bench_string),
 ]
 
 
@@ -128,4 +128,4 @@ def time_task(fn: Callable[[], None]) -> float:
 if __name__ == "__main__":
     for name, fn in TASKS:
         t = time_task(fn)
-        print(f"{name:<8} {t:.4f}")
+        print(f"{name:<20} {t:.4f}")
