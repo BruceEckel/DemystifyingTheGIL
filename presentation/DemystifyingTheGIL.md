@@ -2,6 +2,7 @@
 title: Demystifying The GIL
 author: Bruce Eckel
 theme: default
+layout: default
 navigation: false
 selectable: false
 drawers: false
@@ -121,16 +122,15 @@ Code that is "accidentally thread-safe" today:
 
 ---
 
-# A Concrete Example
-
-A common pattern in library code today:
+# A common pattern in library code
 
 ```python
-# module-level shared state — common in caching, registries, plugins
+# module-level shared state (caching, registries, plugins)
 _registry = {}
 
 def register(name, obj):
-    _registry[name] = obj   # dict write — "safe enough" under GIL
+    # dict write: "safe enough" under GIL
+    _registry[name] = obj
 
 def lookup(name):
     return _registry.get(name)
@@ -139,7 +139,7 @@ def lookup(name):
 Under 3.14t with concurrent `register()` calls:
 
 - Two threads resize the dict simultaneously → internal structure corruption
-- Or one thread iterates while another inserts → `RuntimeError: dictionary changed size`
+- One thread iterates, another inserts → `RuntimeError: dictionary changed size`
 - **The code didn't change. The behavior did.**
 
 ---
