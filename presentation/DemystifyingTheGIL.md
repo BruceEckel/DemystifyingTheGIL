@@ -3,10 +3,12 @@ title: Demystifying The GIL
 author: Bruce Eckel
 theme: default
 layout: default
+contextMenu: false
+drawings:
+  enabled: false
 navigation: false
 selectable: false
 drawers: false
-contextMenu: false
 info: false
 css: style.css
 ---
