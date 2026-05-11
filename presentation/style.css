@@ -1,8 +1,33 @@
 :root {
   --slidev-code-font-size: 1.2em;
-  --slidev-code-line-height: 1.1;
 }
 
 .slidev-code {
   line-height: 1.1 !important;
+  background: white !important;
+}
+
+.slidev-code .shiki {
+  background: white !important;
+}
+
+html:not(.dark) .shiki span {
+  color: black !important;
+}
+
+html.dark .shiki span {
+  color: black !important;
+}
+
+.slidev-code .line.dishonored {
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+.slidev-code .line.dishonored span {
+  color: black !important;
+}
+
+.slidev-code .line.highlighted {
+  background-color: #ffff00 !important;
 }

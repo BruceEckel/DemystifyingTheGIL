@@ -43,8 +43,10 @@ You should see `cpython-3.14.X-...` (with GIL) and `cpython-3.14.X+freethreaded-
 Install the Slidev CLI globally to view or edit the slides:
 
 ```
-npm install -g @slidev/cli @slidev/theme-default
+npm i -g @slidev/cli@0.50.0
 ```
+
+> Note that version 50 is required to allow highlighting; later version break highlighting
 
 ## Using the Makefile
 

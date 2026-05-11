@@ -2,6 +2,7 @@
 title: Demystifying The GIL
 author: Bruce Eckel
 theme: default
+css: style.css
 ---
 
 # Demystifying The GIL
@@ -42,7 +43,7 @@ STORE_GLOBAL  counter       # write result back
 
 # Sipping from the Concurrency Firehose
 
-<<< ../examples/the_camels_nose.py{9-11}
+<<< ../examples/the_camels_nose.py {5,10}
 
 ---
 
