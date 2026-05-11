@@ -41,8 +41,6 @@ STORE_GLOBAL  counter       # write result back
 
 ---
 
-# Sipping from the Concurrency Firehose
-
 <<< ../examples/the_camels_nose.py {5,10}
 
 ---

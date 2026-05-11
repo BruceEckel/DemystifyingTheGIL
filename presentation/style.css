@@ -31,3 +31,10 @@ html.dark .shiki span {
 .slidev-code .line.highlighted {
   background-color: #ffff00 !important;
 }
+
+.slidev-layout p,
+.slidev-layout li {
+  font-size: 1.3em;
+  line-height: 1.2;
+  margin-bottom: 0.4em;
+}
