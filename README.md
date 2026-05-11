@@ -3,7 +3,7 @@
 Companion repository for the PyCon 2026 presentation *Demystifying The GIL*. Contains:
 
 - `examples/`: runnable Python scripts that demonstrate GIL and free-threading behavior
-- `presentation/`: Marp slide source for the talk
+- `presentation/`: Slidev slide source for the talk
 - `book/`: a book that grew out of preparing the talk
 
 ## Installation
@@ -12,7 +12,7 @@ Companion repository for the PyCon 2026 presentation *Demystifying The GIL*. Con
 
 - [uv](https://docs.astral.sh/uv/getting-started/installation/) for managing Python and dependencies
 - GNU Make (on Windows, comes with [Git for Windows](https://git-scm.com/download/win))
-- [Node.js](https://nodejs.org/) and `npm` for the Marp CLI (only needed to view slides)
+- [Node.js](https://nodejs.org/) and `npm` for the Slidev CLI (only needed to view slides)
 
 ### Setup
 
@@ -40,10 +40,10 @@ uv python list
 
 You should see `cpython-3.14.X-...` (with GIL) and `cpython-3.14.X+freethreaded-...` (without).
 
-Install the Marp CLI globally to view or edit the slides:
+Install the Slidev CLI globally to view or edit the slides:
 
 ```
-npm install -g @marp-team/marp-cli
+npm install -g @slidev/cli @slidev/theme-default
 ```
 
 ## Using the Makefile
@@ -78,7 +78,7 @@ make all      # both
 ```
 make list      # print every <script.py> option, one per line
 make overhead  # compare single-threaded performance across builds
-make present   # launch the Marp slide preview, with auto-reload on edits
+make present   # launch the Slidev slide preview, with auto-reload on edits
 ```
 
 ## The Book

@@ -27,7 +27,7 @@ help:
 	@echo "  make nogil                -- run all examples without the GIL"
 	@echo "  make all                  -- run both"
 	@echo "  make overhead             -- compare single-threaded performance across builds"
-	@echo "  make present              -- launch the Marp slide preview"
+	@echo "  make present              -- launch the Slidev slide preview"
 	@echo "  make list                 -- list all <script.py> options"
 	@echo "  make <script.py>          -- run one example with GIL then no GIL (.\ prefix ok)"
 	@echo "  make gil <script.py>      -- run one example with GIL only"
@@ -50,7 +50,7 @@ list:
 	@$(foreach e,$(EXAMPLES),echo $(e);)
 
 present:
-	marp --preview ../presentation/outline.md
+	slidev ../presentation/outline.md
 
 ifneq ($(MODE_AND_SCRIPT),)
 # Mode flag plus script: flag selects the build, script runs once in that mode.

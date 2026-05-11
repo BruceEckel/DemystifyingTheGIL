@@ -1,5 +1,4 @@
 ---
-marp: true
 title: Demystifying The GIL
 author: Bruce Eckel
 theme: default
@@ -130,8 +129,9 @@ uv run --python 3.14t script.py
 
 # Act 3: The Coming Surprise
 
-Note:
+<!--
 ~10 minutes for this section.
+-->
 
 ---
 
@@ -237,5 +237,6 @@ $ uv run --python 3.14t counter_race.py    # no GIL: broken
 $ uv run --python 3.14t counter_lock.py    # no GIL: fixed
 ```
 
-Note:
+<!--
 18 slides · ~30 minutes · 1.5–2 min/slide
+-->
