@@ -45,6 +45,25 @@ STORE_GLOBAL  counter       # write result back
 
 ---
 
+# Two Problems!
+
+1. Getting the right answer
+2. Making it run faster rather than slower
+
+---
+
+<<< ../examples/cpu_parallel.py#setup
+
+---
+
+<<< ../examples/cpu_parallel.py#seq_comparison
+
+---
+
+<<< ../examples/cpu_parallel.py#par_comparison
+
+---
+
 # What Is the GIL?
 
 - A *lock* (aka *mutex*) protects shared memory from simultaneous modification.
