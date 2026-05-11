@@ -22,9 +22,15 @@ image: TheGILLandscape.png
 
 ---
 ---
-# Dunning-Kruger Strikes Again!
 
 <<< ../examples/concurrency_is_easy.py
+
+---
+
+# Two Problems!
+
+1. Getting the right answer
+2. Making it run faster rather than slower
 
 ---
 
@@ -45,38 +51,27 @@ STORE_GLOBAL  counter       # write result back
 
 ---
 
-# Two Problems!
-
-1. Getting the right answer
-2. Making it run faster rather than slower
-
----
-
 <<< ../examples/cpu_parallel.py#setup
 
 ---
 
-<<< ../examples/cpu_parallel.py#seq_comparison
-
----
-
-<<< ../examples/cpu_parallel.py#par_comparison
+<<< ../examples/cpu_parallel.py#comparison
 
 ---
 
 # What Is the GIL?
 
-- A *lock* (aka *mutex*) protects shared memory from simultaneous modification.
+- *Lock* aka *mutex*: protects shared memory from simultaneous modification.
 - *Global* + *interpreter*: There's only one protecting the shared memory for the entire interpreter
-- Only one thread executes Python bytecode at a time
-- A CPython implementation detail; other implementations (Jython, PyPy-STM, which uses Software Transactional Memory) don't have it
+- More than one thread can be used, but only one thread executes Python bytecodes at a time
+- This is a CPython implementation detail; other implementations (Jython, PyPy-STM, which uses Software Transactional Memory) don't have it
 - Since Python 1.5 (1997)
 
 ---
 
 # What Shared Memory is Protected?
 
-- **Reference counting** — `ob_refcnt` inc/dec must be atomic; GIL makes it so
+- **Reference counting** — GIL ensures `ob_refcnt` inc/dec is atomic
 - **Memory allocator** — `PyMem_Malloc` / `PyObject_New` are not thread-safe without it
 - **Cyclic garbage collector** — needs exclusive traversal of the entire object graph
 - **CPython internals** — module `__dict__`, type objects, interned strings are unprotected
@@ -91,21 +86,20 @@ STORE_GLOBAL  counter       # write result back
 
 # Why It "Works" With the GIL
 
-- The GIL is released only at predictable points — every N bytecodes (the "check interval")
+- The GIL is released only at predictable points:
+  - The "check interval": every 5 ms (Python 3.11+)
+  - Backward jumps and function calls only (Python 3.11+)
 - Those 3 bytecodes are short enough that the GIL often isn't released between them
 - But this is **not guaranteed** — it's timing luck
 - Even with the GIL, long enough critical sections *can* be interrupted
-- You've been getting away with incorrect code
 
 ---
 
-# The Iceberg
+# You Don't Write Most of Your Code
 
-- You rewrote your code. You added locks. Your tests pass under 3.14t.
-- **But you didn't write most of the code you run.**
-- Every library you import was written under the GIL assumption
+- Most libraries were written under the GIL assumption
 - Most library authors didn't know they needed to think about thread safety
-- The GIL was their lock — silent & invisible, without their knowledge
+- The GIL was their lock -- silent & invisible, without their knowledge
 
 ---
 
@@ -122,7 +116,7 @@ Code that is "accidentally thread-safe" today:
 
 ---
 
-# A common pattern in library code
+# Under 3.14t with concurrent `register()` calls
 
 ```python
 # module-level shared state (caching, registries, plugins)
@@ -136,10 +130,8 @@ def lookup(name):
     return _registry.get(name)
 ```
 
-Under 3.14t with concurrent `register()` calls:
-
 - Two threads resize the dict simultaneously → internal structure corruption
-- One thread iterates, another inserts → `RuntimeError: dictionary changed size`
+- A thread iterates, another inserts → `RuntimeError: dictionary changed size`
 - **The code didn't change. The behavior did.**
 
 ---

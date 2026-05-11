@@ -65,7 +65,6 @@ def run_in_threads(
     value: Callable[[], int],
     threads: int = 10,
 ) -> None:
-    """Run worker in threads; print value() and elapsed seconds."""
     with Timer() as t:
         run_threads(worker, threads)
     print(f"{value():,}  ({t.elapsed:.2f}s)")

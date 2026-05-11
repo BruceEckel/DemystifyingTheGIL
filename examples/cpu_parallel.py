@@ -12,15 +12,12 @@ def work(n: int) -> None:
 
 # endregion setup
 
-# region seq_comparison
+# region comparison
 
 @timed
 def sequential():
     for _ in range(c.NUM_THREADS):
         work(N)
-
-# endregion seq_comparison
-# region par_comparison
 
 @timed
 def threaded():
@@ -28,7 +25,7 @@ def threaded():
         for _ in range(c.NUM_THREADS):
             pool.submit(work, N)
 
-# endregion par_comparison
+# endregion comparison
 
 # region run_it
 seq = sequential()
