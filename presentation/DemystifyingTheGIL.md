@@ -187,7 +187,7 @@ Why bother? Because without the GIL:
 
 # No-GIL Overhead in 3.14
 
-Cost of operations without using concurrency
+Cost of operations without using concurrency (`make overhead` )
 
 | task              | GIL (s) | FT (s) | delta  |
 |-------------------|---------|--------|--------|
