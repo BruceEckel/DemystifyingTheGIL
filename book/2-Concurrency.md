@@ -48,6 +48,9 @@ Any form of concurrency is not simple, and opens a Pandora's Box of issues you m
 If your system is fast enough, avoid concurrency.
 If it is indeed too slow, first consider simpler alternatives (use Occam's razor):
 
+- **Try Faster Hardware**.
+  Sometimes this is the cheapest and easiest solution.
+
 - **Profile your system and identify bottleneck functions**.
   Convert these into Rust modules via PyO3 (a crate that lets Rust code expose Python-callable functions).
   Using AI, this is now surprisingly straightforward and reliable.
