@@ -40,24 +40,15 @@ uv python list
 
 You should see `cpython-3.14.X-...` (with GIL) and `cpython-3.14.X+freethreaded-...` (without).
 
-Install the Slidev CLI globally to view or edit the slides:
+Install the Slidev CLI and theme into `presentation/` (only needed to view or edit the slides):
 
 ```
-npm install -g @slidev/cli@latest @slidev/theme-default@latest
-
-Or, to test without overwriting your current global install, run latest directly via npx:
-
 cd presentation
-npx @slidev/cli@latest DemystifyingTheGIL.md
-
-To check the version number:
-
-slidev --version
-
-To see the currently published version:
-
-npm info @slidev/cli version
+npm install
+cd ..
 ```
+
+This populates `presentation/node_modules/` with `@slidev/cli` and `@slidev/theme-default` at the versions pinned in `presentation/package.json`. The `make present` target invokes the local install, so no global `slidev` is needed.
 
 ## Using the Makefile
 
