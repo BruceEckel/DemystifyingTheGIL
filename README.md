@@ -43,16 +43,6 @@ You should see `cpython-3.14.X-...` (with GIL) and `cpython-3.14.X+freethreaded-
 Install the Slidev CLI globally to view or edit the slides:
 
 ```
-npm i -g @slidev/cli@0.50.0
-```
-
-> Note that version 50 is required to allow highlighting; later versions break highlighting
-
-To get the most recent version:
-
-```
-Install the latest globally:
-
 npm install -g @slidev/cli@latest @slidev/theme-default@latest
 
 Or, to test without overwriting your current global install, run latest directly via npx:
@@ -60,11 +50,11 @@ Or, to test without overwriting your current global install, run latest directly
 cd presentation
 npx @slidev/cli@latest DemystifyingTheGIL.md
 
-Check the version after:
+To check the version number:
 
 slidev --version
 
-Or look at what's currently published:
+To see the currently published version:
 
 npm info @slidev/cli version
 ```

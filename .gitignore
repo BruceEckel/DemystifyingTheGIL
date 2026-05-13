@@ -208,3 +208,6 @@ __marimo__/
 /.idea
 /.claude
 presentation/outline.html
+
+# Node (slidev)
+node_modules/
