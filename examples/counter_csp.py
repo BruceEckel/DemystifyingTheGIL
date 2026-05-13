@@ -16,7 +16,7 @@ import threading
 from concurrent.futures import ThreadPoolExecutor
 
 import constants as c
-from utils import report
+from utils import Timer, report
 
 DONE = object()  # Sentinel: no more increments will arrive.
 
@@ -45,11 +45,12 @@ if __name__ == "__main__":
         for _ in range(c.ITERATIONS):
             in_channel.put("inc")
 
-    with ThreadPoolExecutor(max_workers=c.NUM_THREADS) as pool:
-        for _ in range(c.NUM_THREADS):
-            pool.submit(worker)
+    with Timer() as t:
+        with ThreadPoolExecutor(max_workers=c.NUM_THREADS) as pool:
+            for _ in range(c.NUM_THREADS):
+                pool.submit(worker)
 
-    in_channel.put(DONE)
-    counter.join()
+        in_channel.put(DONE)
+        counter.join()
 
-    report("csp", out_channel.get(), c.EXPECTED)
+    report("csp", out_channel.get(), c.EXPECTED, t.elapsed)
