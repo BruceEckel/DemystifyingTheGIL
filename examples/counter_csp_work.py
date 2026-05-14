@@ -5,7 +5,7 @@ between `queue.put()` calls, so threads run in parallel and the
 queue is just a coordination point rather than a bottleneck.
 
 This is `counter_csp.py` with `WORK_PER_SEND > 0`. The book at
-5-HistoryOfTheGIL.md:483 notes that adding real CPU work makes the
+05-HistoryOfTheGIL.md:483 notes that adding real CPU work makes the
 speedup real; this file demonstrates that claim.
 """
 

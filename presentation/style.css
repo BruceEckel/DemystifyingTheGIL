@@ -7,11 +7,11 @@
   padding-top: 0.2rem !important;
 }
 
-/* Code blocks: font, color, background, line spacing */
+/* Code blocks */
 .slidev-code,
 .slidev-code .shiki,
 .slidev-code .shiki span {
-    font-family: "Iosevka Term", ui-monospace, Consolas, monospace !important;
+  font-family: "Iosevka Term", ui-monospace, Consolas, monospace !important;
   font-weight: 800 !important;
 }
 
@@ -28,14 +28,10 @@
   color: black !important;
 }
 
-/* Line decorations (referenced by build_html.py for HTML export) */
+/* Line decorations (used by build_html.py for HTML export) */
 .slidev-code .line.dishonored {
   opacity: 1 !important;
   filter: none !important;
-}
-
-.slidev-code .line.dishonored span {
-  color: black !important;
 }
 
 .slidev-code .line.highlighted {

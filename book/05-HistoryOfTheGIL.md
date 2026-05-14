@@ -452,7 +452,7 @@ directly, using techniques that didn't exist (or weren't mature enough) in the
 
 This is the free-threaded build (`3.13t`, `3.14t`) that meets the single-threaded performance bar.
 It is still opt-in. It also changes the contract that extension authors have
-relied on for three decades (see `8-TheBrokenContract.md`).
+relied on for three decades (see `08-TheBrokenContract.md`).
 
 ## Where Free-Threading (FT) Helps
 

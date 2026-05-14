@@ -6,7 +6,7 @@ threads serialize through the GIL and the speedup is none. Without
 the GIL, the work runs truly in parallel and the event loop stays
 free.
 
-Chapter 4 (4-PythonConcurrencyStrategies.md:63) describes this
+Chapter 4 (04-PythonConcurrencyStrategies.md:63) describes this
 benefit: `loop.run_in_executor` becomes useful for CPU-bound calls
 under FT, not just I/O-bound ones.
 """
