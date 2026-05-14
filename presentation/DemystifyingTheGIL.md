@@ -74,7 +74,7 @@ STORE_GLOBAL  counter  # write result back
 
 # No-GIL Overhead in 3.14t (`make overhead` )
 
-Cost of operations on single-threaded code. 
+Cost of single-threaded code might get to 2-5% eventually
 
 | task              | GIL (s) | FT (s) | delta  |
 |-------------------|---------|--------|--------|
@@ -129,7 +129,8 @@ Code that is "accidentally thread-safe" today:
 ---
 
 ```python
-# module-level shared state (cache, registry, plugin)
+# module-level shared state 
+# (cache, registry, plugin)
 _registry = {}
 
 def register(name, obj):

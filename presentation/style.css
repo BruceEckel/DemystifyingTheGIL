@@ -2,34 +2,33 @@
   --slidev-code-font-size: 1.6em;
 }
 
-.slidev-code,
-.slidev-code .shiki,
-.slidev-code .shiki span {
-  font-family: ui-monospace, "Iosevka", Consolas, monospace !important;
-  font-weight: 800 !important;
-}
-
+/* Slide containing a code block: trim top padding */
 .slidev-layout:has(.slidev-code) {
   padding-top: 0.2rem !important;
 }
 
-.slidev-code {
-  line-height: 1.1 !important;
-  background: white !important;
+/* Code blocks: font, color, background, line spacing */
+.slidev-code,
+.slidev-code .shiki,
+.slidev-code .shiki span {
+    font-family: "Iosevka Term", ui-monospace, Consolas, monospace !important;
+  font-weight: 800 !important;
 }
 
+.slidev-code,
 .slidev-code .shiki {
   background: white !important;
 }
 
-html:not(.dark) .shiki span {
+.slidev-code {
+  line-height: 0.95 !important;
+}
+
+.shiki span {
   color: black !important;
 }
 
-html.dark .shiki span {
-  color: black !important;
-}
-
+/* Line decorations (referenced by build_html.py for HTML export) */
 .slidev-code .line.dishonored {
   opacity: 1 !important;
   filter: none !important;
@@ -43,6 +42,7 @@ html.dark .shiki span {
   background-color: #ffff00 !important;
 }
 
+/* Body text and tables */
 .slidev-layout p,
 .slidev-layout li {
   font-size: 1.3em;
