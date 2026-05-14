@@ -5,7 +5,7 @@
 .slidev-code,
 .slidev-code .shiki,
 .slidev-code .shiki span {
-  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace !important;
+  font-family: ui-monospace, "Iosevka", Consolas, monospace !important;
   font-weight: 800 !important;
 }
 
