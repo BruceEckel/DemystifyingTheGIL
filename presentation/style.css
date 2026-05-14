@@ -1,5 +1,5 @@
 :root {
-  --slidev-code-font-size: 1.4em;
+  --slidev-code-font-size: 1.6em;
 }
 
 .slidev-code,
@@ -10,7 +10,7 @@
 }
 
 .slidev-layout:has(.slidev-code) {
-  padding-top: 0.5rem !important;
+  padding-top: 0.2rem !important;
 }
 
 .slidev-code {

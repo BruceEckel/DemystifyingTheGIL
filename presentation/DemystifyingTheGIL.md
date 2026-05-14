@@ -36,13 +36,13 @@ image: TheGILLandscape.png
 # The Atomicity of `counter += 1`
 
 ```
-LOAD_GLOBAL   counter       # read value from memory
-BINARY_OP     +  1          # compute counter + 1
-STORE_GLOBAL  counter       # write result back
+LOAD_GLOBAL   counter  # read value from memory
+BINARY_OP     +  1     # compute counter + 1
+STORE_GLOBAL  counter  # write result back
 ```
 
 - Two threads read the same value → both increment → one write is lost
-- In 3.11+, `counter += 1` is atomic: Context switches only happen on function calls and back jumps
+- In 3.11+, `counter += 1` **is** atomic: Context switches only happen on function calls and back jumps
 - With free threads, threads context switch **anywhere**
 
 ---
@@ -74,7 +74,7 @@ STORE_GLOBAL  counter       # write result back
 
 # No-GIL Overhead in 3.14t (`make overhead` )
 
-Cost of operations without using concurrency 
+Cost of operations on single-threaded code. 
 
 | task              | GIL (s) | FT (s) | delta  |
 |-------------------|---------|--------|--------|
