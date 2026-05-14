@@ -3,9 +3,9 @@ NOGIL = uv run --python 3.14t
 
 EXAMPLES = concurrency_is_easy.py the_camels_nose.py cpu_parallel.py counter_sharded.py \
            counter_coarse.py cache_readmostly.py \
-           counter_race.py counter_lock.py counter_actor.py counter_csp.py two_counters.py \
+           counter_race.py counter_lock.py counter_actor.py counter_csp.py counter_csp_work.py two_counters.py \
            context_switch.py surprise.py no_surprise.py stats_race.py connection_pool.py \
-           refcount_race.py dis_increment.py opmap_contents.py async_fetch.py mp_pool.py \
+           refcount_race.py dis_increment.py opmap_contents.py async_fetch.py async_cpu_offload.py mp_pool.py \
            process_pool_executor.py
 
 GIL_TARGETS   = $(addprefix gil-,$(EXAMPLES))

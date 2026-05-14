@@ -18,10 +18,11 @@ from pathlib import Path
 
 DEMOS: list[tuple[str, str]] = [
     ("Embarrassingly parallel", "cpu_parallel.py"),
+    ("Async + CPU offload", "async_cpu_offload.py"),
     ("Sharded accumulators", "counter_sharded.py"),
     ("Coarse-grained locking", "counter_coarse.py"),
     ("Read-mostly shared state", "cache_readmostly.py"),
-    ("Pipeline parallelism (CSP)", "counter_csp.py"),
+    ("Pipeline parallelism (CSP)", "counter_csp_work.py"),
 ]
 
 BUILDS: list[tuple[str, str]] = [
