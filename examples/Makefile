@@ -1,12 +1,19 @@
 GIL   = uv run --python 3.14+gil
 NOGIL = uv run --python 3.14t
 
-EXAMPLES = concurrency_is_easy.py the_camels_nose.py cpu_parallel.py counter_sharded.py \
-           counter_coarse.py cache_readmostly.py \
-           counter_race.py counter_lock.py counter_actor.py counter_csp.py counter_csp_work.py two_counters.py \
-           context_switch.py surprise.py no_surprise.py stats_race.py connection_pool.py \
-           refcount_race.py dis_increment.py opmap_contents.py async_fetch.py async_cpu_offload.py mp_pool.py \
-           process_pool_executor.py
+# FT-friendly pattern demos (compared by `make FTFriendly`).
+FT_FRIENDLY = cpu_parallel.py async_cpu_offload.py counter_sharded.py \
+              counter_coarse.py cache_readmostly.py counter_csp_work.py
+
+# Race-condition and synchronization demos.
+RACES = concurrency_is_easy.py the_camels_nose.py counter_race.py counter_lock.py \
+        counter_actor.py counter_csp.py two_counters.py context_switch.py \
+        surprise.py no_surprise.py stats_race.py connection_pool.py refcount_race.py
+
+# Reference, async, and multiprocessing examples.
+OTHER = dis_increment.py opmap_contents.py async_fetch.py mp_pool.py process_pool_executor.py
+
+EXAMPLES = $(FT_FRIENDLY) $(RACES) $(OTHER)
 
 GIL_TARGETS   = $(addprefix gil-,$(EXAMPLES))
 NOGIL_TARGETS = $(addprefix nogil-,$(EXAMPLES))
@@ -18,7 +25,7 @@ MODE_FLAG       = $(filter gil nogil,$(MAKECMDGOALS))
 SCRIPT_GOAL     = $(filter $(EXAMPLES) $(DOT_EXAMPLES),$(MAKECMDGOALS))
 MODE_AND_SCRIPT = $(if $(MODE_FLAG),$(SCRIPT_GOAL))
 
-.PHONY: all gil nogil overhead FTFriendly help list present $(EXAMPLES)
+.PHONY: all gil nogil overhead FTFriendly help list list-ft present $(EXAMPLES)
 
 .DEFAULT_GOAL := help
 
@@ -31,6 +38,7 @@ help:
 	@echo "  make FTFriendly           -- compare FT-friendly patterns across builds"
 	@echo "  make present              -- launch the Slidev slide preview"
 	@echo "  make list                 -- list all <script.py> options"
+	@echo "  make list-ft              -- list the FT-friendly pattern demos"
 	@echo "  make <script.py>          -- run one example with GIL then no GIL (.\ prefix ok)"
 	@echo "  make gil <script.py>      -- run one example with GIL only"
 	@echo "  make nogil <script.py>    -- run one example without the GIL only"
@@ -53,6 +61,9 @@ FTFriendly:
 
 list:
 	@$(foreach e,$(EXAMPLES),echo $(e);)
+
+list-ft:
+	@$(foreach e,$(FT_FRIENDLY),echo $(e);)
 
 present:
 	npm --prefix ../presentation run dev -- DemystifyingTheGIL.md
