@@ -33,14 +33,7 @@ image: TheGILLandscape.png
 
 ---
 
-# Two Problems!
-
-1. Getting the right answer
-2. Making it run faster rather than slower
-
----
-
-# `counter += 1` Is Not Atomic
+# The Atomicity of `counter += 1`
 
 ```
 LOAD_GLOBAL   counter       # read value from memory
@@ -48,8 +41,10 @@ BINARY_OP     +  1          # compute counter + 1
 STORE_GLOBAL  counter       # write result back
 ```
 
-- A context switch can happen **between any two of these steps**
+- Before 3.2: A context switch can happen **between any two of these steps**
 - Two threads read the same value → both increment → one write is lost
+- In 3.2+, `counter += 1` is atomic: Context switches only happen on function calls and back jumps
+- With free threads, many true threads are context switching **anywhere**
 
 ---
 
@@ -185,7 +180,7 @@ Why bother? Because without the GIL:
 
 ---
 
-# No-GIL Overhead in 3.14
+# No-GIL Overhead in 3.14t
 
 Cost of operations without using concurrency (`make overhead` )
 

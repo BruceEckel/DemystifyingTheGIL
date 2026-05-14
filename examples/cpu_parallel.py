@@ -9,11 +9,9 @@ def work(n: int) -> None:
     total = 0
     for i in range(n):
         total += i * i
-
 # endregion setup
 
 # region comparison
-
 @timed
 def sequential():
     for _ in range(c.NUM_THREADS):
@@ -21,10 +19,11 @@ def sequential():
 
 @timed
 def threaded():
-    with ThreadPoolExecutor(max_workers=c.NUM_THREADS) as pool:
+    with ThreadPoolExecutor(
+        max_workers=c.NUM_THREADS
+    ) as pool:
         for _ in range(c.NUM_THREADS):
             pool.submit(work, N)
-
 # endregion comparison
 
 # region run_it

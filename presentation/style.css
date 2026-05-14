@@ -1,5 +1,16 @@
 :root {
-  --slidev-code-font-size: 1.2em;
+  --slidev-code-font-size: 1.4em;
+}
+
+.slidev-code,
+.slidev-code .shiki,
+.slidev-code .shiki span {
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace !important;
+  font-weight: 800 !important;
+}
+
+.slidev-layout:has(.slidev-code) {
+  padding-top: 0.5rem !important;
 }
 
 .slidev-code {

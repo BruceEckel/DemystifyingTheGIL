@@ -51,20 +51,22 @@ def report(
 ) -> None:
     show(label, *value_status(actual, expected), elapsed)
 
-# region run_in_threads
 
+# region run_in_threads
 def run_in_threads(
     worker: Callable[[], None],
     value: Callable[[], int],
     threads: int = 10,
 ) -> None:
     with Timer() as t:
-        with ThreadPoolExecutor(max_workers=threads) as pool:
+        with ThreadPoolExecutor(
+            max_workers=threads
+        ) as pool:
             for _ in range(threads):
                 pool.submit(worker)
     print(f"{value():,}  ({t.elapsed:.2f}s)")
-
 # endregion run_in_threads
+
 
 def run_and_show(
     label: str,
