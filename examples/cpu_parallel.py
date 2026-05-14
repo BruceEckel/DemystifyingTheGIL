@@ -5,7 +5,7 @@ import constants as c
 from utils import timed
 N: int = 5_000_000
 
-def work(n: int) -> None:
+def work(n: int):
     total = 0
     for i in range(n):
         total += i * i

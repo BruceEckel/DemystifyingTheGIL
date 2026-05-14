@@ -153,7 +153,7 @@ re-take it immediately. This was added to prevent starvation on multicore
 machines, where the releasing thread would often win the re-acquisition race
 against threads waking up on other cores.
 
-In short, "the GIL is released" means: another Python thread now has the
+In short, "the GIL is released" means that another Python thread now has the
 opportunity to run, and if one is waiting, it will. Under the free-threaded
 build the whole mechanism is gone. Threads execute Python bytecode in
 parallel without any handoff, and only the OS-level context switching

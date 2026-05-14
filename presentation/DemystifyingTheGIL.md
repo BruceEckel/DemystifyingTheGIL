@@ -41,10 +41,9 @@ BINARY_OP     +  1          # compute counter + 1
 STORE_GLOBAL  counter       # write result back
 ```
 
-- Before 3.2: A context switch can happen **between any two of these steps**
 - Two threads read the same value → both increment → one write is lost
-- In 3.2+, `counter += 1` is atomic: Context switches only happen on function calls and back jumps
-- With free threads, many true threads are context switching **anywhere**
+- In 3.11+, `counter += 1` is atomic: Context switches only happen on function calls and back jumps
+- With free threads, threads context switch **anywhere**
 
 ---
 
@@ -57,6 +56,37 @@ STORE_GLOBAL  counter       # write result back
 ---
 
 <<< ../examples/cpu_parallel.py#comparison
+
+---
+
+# When Free Threading Is Useful (`make FTFriendly`)
+
+| Pattern                    | File                   | GIL    | FT     | delta  |
+|----------------------------|------------------------|--------|--------|--------|
+| Embarrassingly parallel    | `cpu_parallel.py`      | 4.08s  | 0.78s  | -80.9% |
+| Async + CPU offload        | `async_cpu_offload.py` | 4.08s  | 0.78s  | -80.9% |
+| Sharded accumulators       | `counter_sharded.py`   | 0.02s  | 0.01s  | -50.0% |
+| Coarse-grained locking     | `counter_coarse.py`    | 0.08s  | 0.02s  | -75.0% |
+| Read-mostly shared state   | `cache_readmostly.py`  | 7.81s  | 1.11s  | -85.8% |
+| Pipeline parallelism (CSP) |` counter_csp_work.py`  | 59.60s | 19.81s | -66.8% |
+
+---
+
+# No-GIL Overhead in 3.14t (`make overhead` )
+
+Cost of operations without using concurrency 
+
+| task              | GIL (s) | FT (s) | delta  |
+|-------------------|---------|--------|--------|
+| int +=            | 0.4034  | 0.4604 | +14.1% |
+| obj alloc         | 0.2331  | 0.2823 | +21.1% |
+| tuple new         | 0.2371  | 0.2621 | +10.5% |
+| dict set          | 0.1227  | 0.1455 | +18.6% |
+| list append & pop | 0.0630  | 0.0852 | +35.2% |
+| attr read         | 0.3311  | 0.3898 | +17.7% |
+| func call         | 0.2249  | 0.2479 | +10.2% |
+| str join          | 0.0098  | 0.0106 | +8.2%  |
+| **total**         | **1.6251** | **1.8838** | **+15.9%** |
 
 ---
 
@@ -85,20 +115,18 @@ STORE_GLOBAL  counter       # write result back
 
 ---
 
-# Library Patterns That Will Break
+# Patterns That Will Break
 
 Code that is "accidentally thread-safe" today:
 
-- **Module-level mutable state** — shared caches, counters, registries initialized at import time
-- **Lazy initialization** — `if _cache is None: _cache = build_cache()` (classic TOCTOU)
-- **`dict` / `list` mutations** — appending to a shared list, updating a shared dict
-- **Connection pools** — checkout/checkin logic that assumes serialized access
-- **Logging handlers** — writing to shared buffers or files
-- **C extensions** — any extension that touches Python objects without the GIL held
+- **Module-level mutable state**: shared caches, counters, registries initialized at import time
+- **Lazy initialization**: `if _cache is None: _cache = build_cache()`
+- **`dict` / `list` mutations**: appending to a shared list, updating a shared dict
+- **Connection pools**: checkout/checkin logic that assumes serialized access
+- **Logging handlers**: writing to shared buffers or files
+- **C extensions**: any extension that touches Python objects without the GIL held
 
 ---
-
-# Under 3.14t with concurrent `register()` calls
 
 ```python
 # module-level shared state (cache, registry, plugin)
@@ -114,23 +142,8 @@ def lookup(name):
 
 - Two threads resize the dict simultaneously → internal structure corruption
 - A thread iterates, another inserts → `RuntimeError: dictionary changed size`
-- **The code didn't change. The behavior did.**
-
 
 ---
-
-# No-GIL Overhead in 3.14t
-
-Cost of operations without using concurrency (`make overhead` )
-
-| task              | GIL (s) | FT (s) | delta  |
-|-------------------|---------|--------|--------|
-| int +=            | 0.4034  | 0.4604 | +14.1% |
-| obj alloc         | 0.2331  | 0.2823 | +21.1% |
-| tuple new         | 0.2371  | 0.2621 | +10.5% |
-| dict set          | 0.1227  | 0.1455 | +18.6% |
-| list append & pop | 0.0630  | 0.0852 | +35.2% |
-| attr read         | 0.3311  | 0.3898 | +17.7% |
-| func call         | 0.2249  | 0.2479 | +10.2% |
-| str join          | 0.0098  | 0.0106 | +8.2%  |
-| **total**         | **1.6251** | **1.8838** | **+15.9%** |
+layout: image
+image: FinalSlideEscher.png
+---
