@@ -23,7 +23,6 @@ image: TheGILLandscape.png
 ---
 
 ---
----
 
 <<< ../examples/concurrency_is_easy.py
 
@@ -36,15 +35,16 @@ image: TheGILLandscape.png
 # The Atomicity of `counter += 1`
 
 ```
-LOAD_GLOBAL   counter  # read value from memory
-BINARY_OP     +  1     # compute counter + 1
-STORE_GLOBAL  counter  # write result back
+LOAD_GLOBAL     counter  # read value from memory
+LOAD_SMALL_INT  1        # push the constant 1
+BINARY_OP       13 (+=)  # compute counter + 1
+STORE_GLOBAL    counter  # write result back
 ```
 
 - Two threads read the same value → both increment → one write is lost
 - Before 3.11, context switches happened between any opcodes, but only one thread could execute at a time
 - In 3.11+, `counter += 1` **is** atomic: context switches only happen on function calls and back jumps
-- With free threads, multiple threads context switch between any opcodes
+- With free threads, multiple threads execute opcodes in parallel; nothing serializes them
 
 ---
 
@@ -144,9 +144,9 @@ STORE_GLOBAL  counter  # write result back
   `counter += 1` becomes atomic in practice
 - **2023 (3.12, PEP 684) — Per-interpreter GIL**<br>
   One process, many interpreters, one GIL each<br>
-  Single process memory available across all interpreters<br>
+  Shared address space, but isolated object worlds (channels, not shared objects)<br>
   Prep for subinterpreters
-- **2023 (3.13t / 3.14t, PEP 703)**<br>
+- **PEP 703 accepted 2023; 3.13t shipped 2024, 3.14t in 2025**<br>
   Biased refcounting + immortal objects finally make refcounts thread-safe<br>
   Cheap enough (?) to remove the GIL
 
