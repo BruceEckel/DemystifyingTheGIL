@@ -91,41 +91,63 @@ Cost of single-threaded code might get to 2-5% eventually
 
 ---
 
-# What Is the GIL?
+# How We Got the GIL
 
-- *Lock* aka *mutex*: protects shared memory from simultaneous modification.
-- *Global* + *interpreter*: There's only one protecting the shared memory for the entire interpreter
-- More than one thread can be used, but only one thread executes Python bytecodes at a time
-- This is a CPython implementation detail; other implementations (Jython, PyPy-STM, which uses Software Transactional Memory) don't have it
-- Since Python 1.5 (1997)
+- **1990: Reference counted garbage collection**<br>Simple and deterministic<br>Every `INCREF` & `DECREF` is read-modify-write
+- **1991: Direct C API**<br>`ob_refcnt` is part of the ABI<br>Refcount semantics can never change without breaking
+every extension
+- **1992: We need I/O**<br>The OS already does context switching for threads<br>Now refcount updates can race
+- **Single interpreter-wide lock**<br>The only option that keeps refcounts safe, extensions safe, and single-threaded
+code fast
 
 ---
 
 # The GIL Protects:
 
-- **Reference counting** — GIL ensures `ob_refcnt` inc/dec is atomic
-- **Memory allocator** — `PyMem_Malloc` / `PyObject_New` are not thread-safe without it
-- **Cyclic garbage collector** — needs exclusive traversal of the entire object graph
-- **CPython internals** — module `__dict__`, type objects, interned strings are unprotected
-- **Import system** — `sys.modules` lookups and insertions during `import`
-- **Signal handling** — only the main thread handles signals; GIL ensures it gets scheduled
-- **C extensions** — most extensions assume single-threaded bytecode execution
-- **`sys.settrace` / profiling** — frame inspection assumes serialized execution
-- **Accidental thread safety** — code not written for concurrency works anyway
-
+- **Reference counts**: GIL ensures `ob_refcnt` inc/dec is atomic
+- **Memory allocator**: `PyMem_Malloc` / `PyObject_New` are not thread-safe without it
+- **Cyclic garbage collector**: needs exclusive traversal of the entire object graph
+- **CPython internals**: module `__dict__`, type objects, interned strings are unprotected
+- **Import system**: `sys.modules` lookups and insertions during `import`
+- **Signal handling**: only the main thread handles signals; GIL ensures it gets scheduled
+- **C extensions**: most extensions assume single-threaded bytecode execution
+- **`sys.settrace` / profiling**: frame inspection assumes serialized execution
+- **Accidental thread safety**: code not written for concurrency works anyway
 
 ---
 
-# Patterns That Break
+# Attempts to Remove the GIL & Other Workarounds
 
-Code that is "accidentally thread-safe" today:
+- **1996 — Greg Stein's free-threaded patch**<br>Fine-grained locks, ~2× slower single-threaded, rejected
+- **2008 (2.6) — `multiprocessing`**<br>Sidestep the GIL with separate processes
+- **2011 (3.2) — New GIL**<br>100-opcode counter replaced with a 5ms timer; releaser waits for another thread before re-acquiring
+- **2014–15 (3.4, 3.5) — `asyncio` / `async`-`await`**<br>Removes the *I/O* motivation for threads (but not the CPU one)
+- **2016 — Gilectomy**<br>Another attempt; still couldn't clear the single-threaded bar
 
-- **Module-level mutable state**: shared caches, counters, registries initialized at import time
-- **Lazy initialization**: `if _cache is None: _cache = build_cache()`
-- **`dict` / `list` mutations**: appending to a shared list, updating a shared dict
-- **Connection pools**: checkout/checkin logic that assumes serialized access
-- **Logging handlers**: writing to shared buffers or files
-- **C extensions**: any extension that touches Python objects without the GIL held
+---
+
+# Attempts to Remove the GIL & Other Workarounds
+
+- **2022 (3.11) — Adaptive interpreter**<br>
+  Check points move from *every opcode* to **backward jumps and function calls only**<br>
+  `counter += 1` becomes atomic in practice
+- **2023 (3.12, PEP 684) — Per-interpreter GIL**<br>One process, many interpreters, one GIL each<br>
+  Single process memory available across all interpreters<br>
+  Prep for subinterpreters
+- **2023 (3.13t / 3.14t, PEP 703)**<br>Biased refcounting + immortal objects finally make refcounts thread-safe<br>
+  Cheap enough (?) to remove the GIL
+
+---
+
+# Patterns That Break Without the GIL
+
+- **Module-level mutable state**<br> Shared caches, counters, registries initialized at import time
+- **Lazy initialization**<br> `if _cache is None: _cache = build_cache()`<br>
+  Note lazy imports coming up
+- **`dict` / `list` mutations**<br> Appending to a shared list, updating a shared dict
+- **Connection pools**<br> Checkout/checkin logic that assumes serialized access
+- **Logging handlers**<br> Writing to shared buffers or files
+- **C extensions**<br> Any extension that touches Python objects without the GIL held
 
 ---
 
@@ -146,13 +168,20 @@ def lookup(name):
 
 ---
 
-# When Should You Use Concurrency?
+# Should You Use Concurrency?
 
-- **Only if things run painfully slow**<br>Concurrency always adds complexity.
-- **Use Occam's razor**<br>Faster hardware<br>Profile & optimize<br>Rewrite a function in Rust using AI and PyO3
-- **There are numerous types of concurrency problems**<br>You must understand which one(s) you are trying to solve, to choose the right concurrency pattern(s).
-- **Stop when it's fast enough**<br>Don't unncessarily add development and maintenance costs.
-- **Concurrency is often an architectural choice**<br>Do early experiments to see if you need it.
+- **Only if things run painfully slow**<br>
+  Concurrency always adds complexity.
+- **Use Occam's razor**<br>
+  Faster hardware<br>
+  Profile & optimize (ask your AI)<br>
+  Rewrite a function in Rust using AI and PyO3
+- **There are numerous types of concurrency problems**<br>
+  You must understand which one(s) you are trying to solve, to choose the right concurrency pattern(s).
+- **Stop when it's fast enough**<br>
+  Don't unncessarily add development and maintenance costs.
+- **Concurrency is often an architectural choice**<br>
+  Do early experiments to see if you need it.
 
 ---
 layout: image
