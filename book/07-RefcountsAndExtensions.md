@@ -22,6 +22,65 @@ if obj.ob_refcnt == 0:
 
 A thread switch between LOAD and STORE corrupts the count. This is exactly what `refcount_race.py` demonstrates.
 
+## Cycles and the `gc` Module
+
+Reference counting alone cannot reclaim cyclic garbage. Two objects that point at each other (a parent and child node, any doubly-linked structure, or any cycle of references) keep each other's refcount above zero forever, even when no outside reference exists. Pure refcounted code leaks cycles.
+
+CPython did not address this until **Python 2.0 (October 2000)**, which shipped a cycle-detecting collector as the `gc` module. Neil Schemenauer led the implementation. The algorithm is a standard technique for hybrid refcount-plus-tracing systems, and its shape has not changed materially in 25 years.
+
+### Tracked vs. untracked objects
+
+Only some objects participate in cycle collection. Immutable objects that cannot reference other tracked objects (`int`, `float`, `str`, `bytes`) are skipped entirely. The tracked set is containers and instances: `list`, `dict`, `set`, `tuple` (when it holds at least one tracked element), user-class instances, frames, generators. Each tracked object is linked into a per-generation doubly-linked list inside the runtime.
+
+This selectivity matters: most allocated objects are immutable scalars, and walking them during collection would be wasted work.
+
+### The three generations
+
+Tracked objects start in **generation 0**. Survive a collection, get promoted to generation 1; survive again, generation 2. Generation 0 is collected often; generation 1 less often; generation 2 rarely. Newly created objects are the most likely to be garbage (the *generational hypothesis*), so this concentrates work where it matters.
+
+Defaults are visible and tunable through `gc.get_threshold()` / `gc.set_threshold()`. The gen 0 threshold is the number of allocations minus deallocations that triggers a collection; the gen 1 and gen 2 thresholds count gen 0 (and gen 1) collections, respectively.
+
+### When and how the collector runs
+
+The collector has no dedicated thread. It runs synchronously, in three situations:
+
+**Automatically, during container allocation.** Every time a tracked object is allocated (through `PyObject_GC_New` in the C API, or implicitly when Python code creates a `list`, `dict`, `set`, instance, etc.), CPython increments a per-generation counter. Every tracked deallocation decrements it. After the allocation completes, the runtime checks the counter: if `counter > threshold[0]` (default 700), it runs a gen 0 collection right then, on the same thread that did the allocation, before returning the new object to the caller.
+
+After each gen 0 collection, a separate counter is bumped. If it crosses `threshold[1]` (default 10), gen 1 is collected too. Same for gen 1 → gen 2 via `threshold[2]` (default 10). A full gen 2 sweep therefore happens roughly every 700 × 10 × 10 ≈ 70 000 net container allocations.
+
+The check is post-allocation, not pre-, so a single large allocation never gets scheduled specially. The trigger is the steady drumbeat of container creates.
+
+**Manually, via `gc.collect()`.** Forces a full collection of all generations immediately. Returns the number of unreachable objects found. Useful after dropping a large structure known to contain cycles, for benchmarking, or as a hint before shutdown. You can also call `gc.disable()` to suppress automatic triggering and drive collection yourself, which long-running services sometimes do to control pause timing.
+
+**At interpreter shutdown.** Final cleanup runs collections to free as many objects as possible and surface lingering finalizers. Not perfect: some C state lives outside Python's tracking and may leak across shutdown.
+
+A few details worth knowing:
+
+- The pause is paid by whichever thread happens to do the allocation that crosses the threshold. There is no separate GC thread to amortize this.
+- Function calls, imports, attribute lookups, and bytecode dispatch do not trigger the collector directly. Only allocations of tracked objects do.
+- C extensions that allocate tracked objects must use `PyObject_GC_New` and call `PyObject_GC_Track` so the new object joins the generation list. Forgetting this is a silent leak of any cycle the object participates in.
+- In the free-threaded build, counter updates are atomic and the collection itself is stop-the-world: the triggering thread asks every other Python thread to pause at the next safe point before the walk begins. See chapter 9.
+
+### The cycle-detection algorithm
+
+For a generation being collected:
+
+1. Take a snapshot of each tracked object's `ob_refcnt`. Call this its *GC refcount*.
+2. Walk every tracked-to-tracked reference within the generation. For each such reference, **decrement** the target's GC refcount.
+3. After the walk, any object whose GC refcount is still > 0 has at least one reference from *outside* the generation (the Python stack, module globals, an older generation, a C extension). It is reachable.
+4. Propagate reachability transitively: anything reachable from a still-positive-count object is also reachable.
+5. The remainder is unreachable cyclic garbage. Run finalizers (`__del__`), then free it.
+
+The GC refcount is a scratch field; the real `ob_refcnt` is untouched. The collector never moves objects; pointers stay valid throughout. The cost is proportional to the generation's size, not to the heap.
+
+### Why this complements rather than replaces refcounting
+
+The deterministic refcount path still does the bulk of the work and frees objects immediately when their count hits zero. Files close when the last reference drops, sockets release, `with` blocks behave predictably. The cycle collector handles only the edge case refcounting cannot, on a schedule, and only over the tracked subset.
+
+This split is why CPython has the destruction guarantees scripting users expect *and* still reclaims arbitrary object graphs. Pure tracing GCs (Java, C#, JVM-based Jython) cannot promise the first; pure refcounting cannot deliver the second.
+
+Free-threading does not introduce a new collector. It changes how this existing one runs: collections become stop-the-world pauses at safe points, so the algorithm sees a consistent object graph without the GIL. That story is in chapter 9.
+
 ## What the GIL Provides
 
 The GIL serializes all Python bytecode execution. Only one thread runs Python at a time, so no two threads can interleave their LOAD/STORE sequences on the same object. Reference counts are always consistent.

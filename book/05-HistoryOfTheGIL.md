@@ -67,6 +67,12 @@ common path.
 Nothing about this mattered in 1990, because Python had no threads. But the
 decision was now baked in. The rest of the story is shaped by it.
 
+One other limitation of pure refcounting is worth flagging here: it cannot
+reclaim cyclic garbage. Two objects that point at each other keep each other's
+refcount above zero forever. CPython did not address this until Python 2.0
+(October 2000) added a cycle-detecting collector in the `gc` module. See
+chapter 7 for how it works.
+
 ## 1991: A Direct C Extension API
 
 Python 0.9.0 shipped in February 1991. One of its defining features was how

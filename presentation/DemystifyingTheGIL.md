@@ -75,7 +75,7 @@ STORE_GLOBAL  counter  # write result back
 
 # FT Overhead in 3.14t (`make overhead`)
 
-Cost of single-threaded code might get to 2-5% eventually
+- Cost of single-threaded code might get to 2-5% eventually
 
 | task              | GIL (s)    | FT (s)     | delta      |
 |-------------------|------------|------------|------------|
@@ -95,7 +95,8 @@ Cost of single-threaded code might get to 2-5% eventually
 
 - **1990: Reference counted garbage collection**<br>
   Simple and deterministic<br>
-  Every `INCREF` & `DECREF` is read-modify-write
+  Every `INCREF` & `DECREF` is read-modify-write<br>
+  Python 1 leaked cycles; no cycle collector until Python 2
 - **1991: Direct C API**<br>
   `ob_refcnt` is part of the ABI<br>
   Refcount semantics can never change without breaking every extension
