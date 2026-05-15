@@ -42,9 +42,9 @@ STORE_GLOBAL  counter  # write result back
 ```
 
 - Two threads read the same value → both increment → one write is lost
-- Before 3.11, context switches happened between any opcodes
-- In 3.11+, `counter += 1` **is** atomic: Context switches only happen on function calls and back jumps
-- With free threads, threads context switch **anywhere**
+- Before 3.11, context switches happened between any opcodes, but only one thread could execute at a time
+- In 3.11+, `counter += 1` **is** atomic: context switches only happen on function calls and back jumps
+- With free threads, multiple threads context switch between any opcodes
 
 ---
 
