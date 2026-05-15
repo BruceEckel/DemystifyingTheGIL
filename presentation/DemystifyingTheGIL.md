@@ -28,11 +28,11 @@ image: TheGILLandscape.png
 
 ---
 
-<<< ../examples/utils.py#run_in_threads
+<<< ../examples/utils.py#run_in_threads {7}
 
 ---
 
-# The Atomicity of `counter += 1`
+# **The Atomicity of `counter += 1`**
 
 ```
 LOAD_GLOBAL     counter  # read value from memory
@@ -44,7 +44,7 @@ STORE_GLOBAL    counter  # write result back
 - Two threads read the same value → both increment → one write is lost
 - Before 3.11, context switches happened between any opcodes, but only one thread could execute at a time
 - In 3.11+, `counter += 1` **is** atomic: context switches only happen on function calls and back jumps
-- With free threads, multiple threads execute opcodes in parallel; nothing serializes them
+- With free threads, multiple threads execute opcodes in parallel; nothing prevents threads from overwriting each other
 
 ---
 

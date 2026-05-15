@@ -3,7 +3,7 @@
 import threading
 from utils import run_in_threads
 counter = 0
-lock = threading.Lock()
+lock = threading.Lock()  # aka mutex
 
 def worker():
     global counter
