@@ -16,30 +16,6 @@ Companion repository for the PyCon 2026 presentation *Demystifying The GIL*. Con
 
 ### Setup
 
-Clone the repo and sync dependencies:
-
-```
-git clone https://github.com/BruceEckel/DemystifyingTheGIL.git
-cd DemystifyingTheGIL
-uv sync
-```
-
-`uv sync` creates `.venv` pinned to the free-threaded build (3.14t).
-
-Pre-install both Python builds (uv will fetch them on first use otherwise):
-
-```
-uv python install 3.14 3.14t
-```
-
-Confirm both are present:
-
-```
-uv python list
-```
-
-You should see `cpython-3.14.X-...` (with GIL) and `cpython-3.14.X+freethreaded-...` (without).
-
 Install the Slidev CLI and theme into `presentation/` (only needed to view or edit the slides):
 
 ```
@@ -52,7 +28,7 @@ This populates `presentation/node_modules/` with `@slidev/cli` and `@slidev/them
 
 ## Using the Makefile
 
-The Makefile lives in `examples/`. Change into that directory first:
+The Makefile lives in `examples/`:
 
 ```
 cd examples
