@@ -458,7 +458,7 @@ relied on for three decades (see `08-TheBrokenContract.md`).
 
 FT wins when threads spend most of their time on work they don't share,
 and any contention is bounded. The ideal is **embarrassingly parallel**
-work: completely independent threads, no shared state. `cpu_parallel.py`
+work: completely independent threads, no shared state. `embarrassingly_parallel.py`
 is the simplest case: each thread does its own CPU-bound loop and never
 touches the others' data.
 

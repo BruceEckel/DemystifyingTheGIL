@@ -1,5 +1,5 @@
 # region setup
-# cpu_parallel.py
+# embarrassingly_parallel.py
 from concurrent.futures import ThreadPoolExecutor
 import constants as c
 from utils import timed

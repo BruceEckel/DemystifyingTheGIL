@@ -42,20 +42,21 @@ STORE_GLOBAL  counter  # write result back
 ```
 
 - Two threads read the same value → both increment → one write is lost
+- Before 3.11, context switches happened between any opcodes
 - In 3.11+, `counter += 1` **is** atomic: Context switches only happen on function calls and back jumps
 - With free threads, threads context switch **anywhere**
 
 ---
 
-<<< ../examples/the_camels_nose.py {5,10}
+<<< ../examples/the_camels_nose.py#show {5,10}
 
 ---
 
-<<< ../examples/cpu_parallel.py#setup
+<<< ../examples/embarrassingly_parallel.py#setup
 
 ---
 
-<<< ../examples/cpu_parallel.py#comparison
+<<< ../examples/embarrassingly_parallel.py#comparison
 
 ---
 
@@ -63,7 +64,7 @@ STORE_GLOBAL  counter  # write result back
 
 | Pattern                    | File                   | GIL    | FT     | delta  |
 |----------------------------|------------------------|--------|--------|--------|
-| Embarrassingly parallel    | `cpu_parallel.py`      | 4.08s  | 0.78s  | -80.9% |
+| Embarrassingly parallel    | `embarrassingly_parallel.py`      | 4.08s  | 0.78s  | -80.9% |
 | Async + CPU offload        | `async_cpu_offload.py` | 4.08s  | 0.78s  | -80.9% |
 | Sharded accumulators       | `counter_sharded.py`   | 0.02s  | 0.01s  | -50.0% |
 | Coarse-grained locking     | `counter_coarse.py`    | 0.08s  | 0.02s  | -75.0% |
@@ -100,7 +101,7 @@ Cost of single-threaded code might get to 2-5% eventually
 
 ---
 
-# What Shared Memory is Protected?
+# The GIL Protects:
 
 - **Reference counting** — GIL ensures `ob_refcnt` inc/dec is atomic
 - **Memory allocator** — `PyMem_Malloc` / `PyObject_New` are not thread-safe without it
@@ -115,7 +116,7 @@ Cost of single-threaded code might get to 2-5% eventually
 
 ---
 
-# Patterns That Will Break
+# Patterns That Break
 
 Code that is "accidentally thread-safe" today:
 
@@ -134,7 +135,6 @@ Code that is "accidentally thread-safe" today:
 _registry = {}
 
 def register(name, obj):
-    # dict write: "safe enough" under GIL
     _registry[name] = obj
 
 def lookup(name):

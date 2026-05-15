@@ -7,7 +7,7 @@ Usage (from the project root or examples/):
     uv run python examples/ft_friendly.py
 
 Each demo prints its own wall-clock time as `(X.XXs)` or, for
-`cpu_parallel.py`, as `threaded:  X.XXs`. The last `X.XXs` token in
+`embarrassingly_parallel.py`, as `threaded:  X.XXs`. The last `X.XXs` token in
 each demo's output is taken as the comparable timing.
 """
 
@@ -17,7 +17,7 @@ import sys
 from pathlib import Path
 
 DEMOS: list[tuple[str, str]] = [
-    ("Embarrassingly parallel", "cpu_parallel.py"),
+    ("Embarrassingly parallel", "embarrassingly_parallel.py"),
     ("Async + CPU offload", "async_cpu_offload.py"),
     ("Sharded accumulators", "counter_sharded.py"),
     ("Coarse-grained locking", "counter_coarse.py"),

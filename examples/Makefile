@@ -2,7 +2,7 @@ GIL   = uv run --python 3.14+gil
 NOGIL = uv run --python 3.14t
 
 # FT-friendly pattern demos (compared by `make FTFriendly`).
-FT_FRIENDLY = cpu_parallel.py async_cpu_offload.py counter_sharded.py \
+FT_FRIENDLY = embarrassingly_parallel.py async_cpu_offload.py counter_sharded.py \
               counter_coarse.py cache_readmostly.py counter_csp_work.py
 
 # Race-condition and synchronization demos.

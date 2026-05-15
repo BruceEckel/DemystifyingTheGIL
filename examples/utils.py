@@ -61,7 +61,7 @@ def run_in_threads(
     with Timer() as t:
         with ThreadPoolExecutor(
             max_workers=threads
-        ) as pool:
+        ) as pool:  # Structured concurrency
             for _ in range(threads):
                 pool.submit(worker)
     print(f"{value():,}  ({t.elapsed:.2f}s)")
