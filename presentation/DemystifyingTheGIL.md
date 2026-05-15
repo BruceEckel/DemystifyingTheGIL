@@ -73,36 +73,41 @@ STORE_GLOBAL  counter  # write result back
 
 ---
 
-# FT Overhead in 3.14t (`make overhead` )
+# FT Overhead in 3.14t (`make overhead`)
 
 Cost of single-threaded code might get to 2-5% eventually
 
-| task              | GIL (s) | FT (s) | delta  |
-|-------------------|---------|--------|--------|
-| int +=            | 0.4034  | 0.4604 | +14.1% |
-| obj alloc         | 0.2331  | 0.2823 | +21.1% |
-| tuple new         | 0.2371  | 0.2621 | +10.5% |
-| dict set          | 0.1227  | 0.1455 | +18.6% |
-| list append & pop | 0.0630  | 0.0852 | +35.2% |
-| attr read         | 0.3311  | 0.3898 | +17.7% |
-| func call         | 0.2249  | 0.2479 | +10.2% |
-| str join          | 0.0098  | 0.0106 | +8.2%  |
+| task              | GIL (s)    | FT (s)     | delta      |
+|-------------------|------------|------------|------------|
+| int +=            | 0.4034     | 0.4604     | +14.1%     |
+| obj alloc         | 0.2331     | 0.2823     | +21.1%     |
+| tuple new         | 0.2371     | 0.2621     | +10.5%     |
+| dict set          | 0.1227     | 0.1455     | +18.6%     |
+| list append & pop | 0.0630     | 0.0852     | +35.2%     |
+| attr read         | 0.3311     | 0.3898     | +17.7%     |
+| func call         | 0.2249     | 0.2479     | +10.2%     |
+| str join          | 0.0098     | 0.0106     | +8.2%      |
 | **total**         | **1.6251** | **1.8838** | **+15.9%** |
 
 ---
 
 # How We Got the GIL
 
-- **1990: Reference counted garbage collection**<br>Simple and deterministic<br>Every `INCREF` & `DECREF` is read-modify-write
-- **1991: Direct C API**<br>`ob_refcnt` is part of the ABI<br>Refcount semantics can never change without breaking
-every extension
-- **1992: We need I/O**<br>The OS already does context switching for threads<br>Now refcount updates can race
-- **Single interpreter-wide lock**<br>The only option that keeps refcounts safe, extensions safe, and single-threaded
-code fast
+- **1990: Reference counted garbage collection**<br>
+  Simple and deterministic<br>
+  Every `INCREF` & `DECREF` is read-modify-write
+- **1991: Direct C API**<br>
+  `ob_refcnt` is part of the ABI<br>
+  Refcount semantics can never change without breaking every extension
+- **1992: We need I/O**<br>
+  The OS already does context switching for threads<br>
+  Now refcount updates can race
+- **Single interpreter-wide lock**<br>
+  The only option that keeps refcounts safe, extensions safe, and single-threaded code fast
 
 ---
 
-# The GIL Protects:
+# The GIL Protects
 
 - **Reference counts**: GIL ensures `ob_refcnt` inc/dec is atomic
 - **Memory allocator**: `PyMem_Malloc` / `PyObject_New` are not thread-safe without it
@@ -118,41 +123,54 @@ code fast
 
 # Attempts to Remove the GIL & Other Workarounds
 
-- **1996 — Greg Stein's free-threaded patch**<br>Fine-grained locks, ~2× slower single-threaded, rejected
-- **2008 (2.6) — `multiprocessing`**<br>Sidestep the GIL with separate processes
-- **2011 (3.2) — New GIL**<br>100-opcode counter replaced with a 5ms timer; releaser waits for another thread before re-acquiring
-- **2014–15 (3.4, 3.5) — `asyncio` / `async`-`await`**<br>Removes the *I/O* motivation for threads (but not the CPU one)
-- **2016 — Gilectomy**<br>Another attempt; still couldn't clear the single-threaded bar
+- **1996 — Greg Stein's free-threaded patch**<br>
+  Fine-grained locks, ~2× slower single-threaded, rejected
+- **2008 (2.6) — `multiprocessing`**<br>
+  Sidestep the GIL with separate processes
+- **2011 (3.2) — New GIL**<br>
+  100-opcode counter replaced with a 5ms timer; releaser waits for another thread before re-acquiring
+- **2014–15 (3.4, 3.5) — `asyncio` / `async`-`await`**<br>
+  Removes the *I/O* motivation for threads (but not the CPU one)
+- **2016 — Gilectomy**<br>
+  Another attempt; still couldn't clear the single-threaded bar
 
 ---
 
-# Attempts to Remove the GIL & Other Workarounds
+# Attempts to Remove the GIL & Other Workarounds (continued)
 
 - **2022 (3.11) — Adaptive interpreter**<br>
   Check points move from *every opcode* to **backward jumps and function calls only**<br>
   `counter += 1` becomes atomic in practice
-- **2023 (3.12, PEP 684) — Per-interpreter GIL**<br>One process, many interpreters, one GIL each<br>
+- **2023 (3.12, PEP 684) — Per-interpreter GIL**<br>
+  One process, many interpreters, one GIL each<br>
   Single process memory available across all interpreters<br>
   Prep for subinterpreters
-- **2023 (3.13t / 3.14t, PEP 703)**<br>Biased refcounting + immortal objects finally make refcounts thread-safe<br>
+- **2023 (3.13t / 3.14t, PEP 703)**<br>
+  Biased refcounting + immortal objects finally make refcounts thread-safe<br>
   Cheap enough (?) to remove the GIL
 
 ---
 
 # Patterns That Break Without the GIL
 
-- **Module-level mutable state**<br> Shared caches, counters, registries initialized at import time
-- **Lazy initialization**<br> `if _cache is None: _cache = build_cache()`<br>
+- **Module-level mutable state**<br>
+  Shared caches, counters, registries initialized at import time
+- **Lazy initialization**<br>
+  `if _cache is None: _cache = build_cache()`<br>
   Note lazy imports coming up
-- **`dict` / `list` mutations**<br> Appending to a shared list, updating a shared dict
-- **Connection pools**<br> Checkout/checkin logic that assumes serialized access
-- **Logging handlers**<br> Writing to shared buffers or files
-- **C extensions**<br> Any extension that touches Python objects without the GIL held
+- **`dict` / `list` mutations**<br>
+  Appending to a shared list, updating a shared dict
+- **Connection pools**<br>
+  Checkout/checkin logic that assumes serialized access
+- **Logging handlers**<br>
+  Writing to shared buffers or files
+- **C extensions**<br>
+  Any extension that touches Python objects without the GIL held
 
 ---
 
 ```python
-# module-level shared state 
+# module-level shared state
 # (cache, registry, plugin)
 _registry = {}
 
@@ -171,17 +189,17 @@ def lookup(name):
 # Should You Use Concurrency?
 
 - **Only if things run painfully slow**<br>
-  Concurrency always adds complexity.
+  Concurrency always adds complexity
 - **Use Occam's razor**<br>
   Faster hardware<br>
   Profile & optimize (ask your AI)<br>
   Rewrite a function in Rust using AI and PyO3
 - **There are numerous types of concurrency problems**<br>
-  You must understand which one(s) you are trying to solve, to choose the right concurrency pattern(s).
+  You must understand which one(s) you are trying to solve, to choose the right concurrency pattern(s)
 - **Stop when it's fast enough**<br>
-  Don't unncessarily add development and maintenance costs.
+  Don't unnecessarily add development and maintenance costs
 - **Concurrency is often an architectural choice**<br>
-  Do early experiments to see if you need it.
+  Do early experiments to see if you need it
 
 ---
 layout: image
