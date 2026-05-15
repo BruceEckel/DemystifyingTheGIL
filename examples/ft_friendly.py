@@ -102,22 +102,23 @@ def main() -> None:
                 print(f"    failed: {e.stderr}", file=sys.stderr)
                 sys.exit(1)
 
-    headers = ["Pattern", "File", "GIL", "FT", "delta"]
+    headers = ["Pattern", "File", "GIL", "FT", "Speedup"]
     rows = []
     for label, script in DEMOS:
         gil = times[label]["GIL"]
         ft = times[label]["FT"]
-        delta = (ft - gil) / gil * 100 if gil > 0 else float("nan")
+        speedup = gil / ft if ft > 0 else float("nan")
         rows.append(
-            [label, script, f"{gil:.2f}s", f"{ft:.2f}s", f"{delta:+.1f}%"]
+            [label, script, f"{gil:.2f}s", f"{ft:.2f}s", f"{speedup:.2f}x"]
         )
     print()
     print(boxed_table(headers, rows))
 
+    md_rows = [[r[0], f"`{r[1]}`", *r[2:]] for r in rows]
     md_path = EXAMPLES_DIR / "ft_friendly.md"
     md_path.write_text(
         "# FT-friendly pattern comparison\n\n"
-        + markdown_table(headers, rows)
+        + markdown_table(headers, md_rows)
         + "\n",
         encoding="utf-8",
     )
