@@ -145,6 +145,16 @@ def lookup(name):
 - A thread iterates, another inserts → `RuntimeError: dictionary changed size`
 
 ---
+
+# When Should You Use Concurrency?
+
+- **Only if things run painfully slow**. Concurrency always adds complexity.
+- **Use Occam's razor**: Faster hardware, profile & optimize, rewrite a function in Rust
+- **There are numerous types of concurrency problems**: You must understand which one(s) you are trying to solve, to choose the right concurrency pattern(s).
+- **Stop when it's fast enough**: Don't unncessarily add development and maintenance costs.
+- **Concurrency is often an architectural choice**: Do experiments to see if you need it.
+
+---
 layout: image
 image: FinalSlideEscher.png
 ---
