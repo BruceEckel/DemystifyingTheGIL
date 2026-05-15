@@ -1,5 +1,8 @@
 :root {
   --slidev-code-font-size: 1.6em;
+  --slidev-code-line-height: 1em;
+  --slidev-code-padding: 4px;
+  --slidev-code-margin: 0;
 }
 
 /* Slide containing a code block: trim top padding */
@@ -20,9 +23,6 @@
   background: white !important;
 }
 
-.slidev-code {
-  line-height: 0.95 !important;
-}
 
 .shiki span {
   color: black !important;
