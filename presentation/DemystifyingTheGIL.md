@@ -51,6 +51,11 @@ STORE_GLOBAL    counter  # write result back
 <<< ../examples/the_camels_nose.py#show {5,10}
 
 ---
+layout: image
+image: CamelsNose.png
+---
+
+---
 
 <<< ../examples/embarrassingly_parallel.py#setup
 
@@ -127,9 +132,10 @@ STORE_GLOBAL    counter  # write result back
 - **1996: Greg Stein's free-threaded patch**<br>
   Fine-grained locks, ~2× slower single-threaded, rejected
 - **2008 (2.6): `multiprocessing`**<br>
-  Sidestep the GIL with separate processes
+  Multiple OS processes, each with its own interpreter and GIL
 - **2011 (3.2): New GIL**<br>
-  100-opcode counter replaced with a 5ms timer; releaser waits for another thread before re-acquiring
+  100-opcode counter replaced with a 5ms timer<br>
+  Releaser waits for another thread before re-acquiring
 - **2014–15 (3.4, 3.5): `asyncio` / `async`-`await`**<br>
   Removes the I/O motivation for threads (but not the CPU one)
 - **2016: Gilectomy**<br>
@@ -172,8 +178,8 @@ STORE_GLOBAL    counter  # write result back
 
 ```python
 # module-level shared state
-# (cache, registry, plugin)
-_registry = {}
+# (registry, cache, plugin)
+_registry = dict()
 
 def register(name, obj):
     _registry[name] = obj
