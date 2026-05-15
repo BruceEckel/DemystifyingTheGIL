@@ -148,11 +148,11 @@ def lookup(name):
 
 # When Should You Use Concurrency?
 
-- **Only if things run painfully slow**. Concurrency always adds complexity.
-- **Use Occam's razor**: Faster hardware, profile & optimize, rewrite a function in Rust
-- **There are numerous types of concurrency problems**: You must understand which one(s) you are trying to solve, to choose the right concurrency pattern(s).
-- **Stop when it's fast enough**: Don't unncessarily add development and maintenance costs.
-- **Concurrency is often an architectural choice**: Do experiments to see if you need it.
+- **Only if things run painfully slow**<br>Concurrency always adds complexity.
+- **Use Occam's razor**<br>Faster hardware<br>Profile & optimize<br>Rewrite a function in Rust using AI and PyO3
+- **There are numerous types of concurrency problems**<br>You must understand which one(s) you are trying to solve, to choose the right concurrency pattern(s).
+- **Stop when it's fast enough**<br>Don't unncessarily add development and maintenance costs.
+- **Concurrency is often an architectural choice**<br>Do early experiments to see if you need it.
 
 ---
 layout: image
