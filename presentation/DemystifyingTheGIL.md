@@ -98,7 +98,7 @@ STORE_GLOBAL    counter  # write result back
   Every `INCREF` & `DECREF` is read-modify-write<br>
   Python 1 leaked cycles; no cycle collector until Python 2
 - **1991: Direct C API**<br>
-  `ob_refcnt` is part of the ABI<br>
+  `ob_refcnt` is part of the *Application Binary Interface* (ABI)<br>
   Refcount semantics can never change without breaking every extension
 - **1992: We need I/O**<br>
   The OS already does context switching for threads<br>
@@ -118,31 +118,31 @@ STORE_GLOBAL    counter  # write result back
 - **Signal handling**: only the main thread handles signals; GIL ensures it gets scheduled
 - **C extensions**: most extensions assume single-threaded bytecode execution
 - **`sys.settrace` / profiling**: frame inspection assumes serialized execution
-- **Accidental thread safety**: code not written for concurrency works anyway
+- <mark>**Accidental thread safety**: code not written for concurrency works anyway</mark>
 
 ---
 
-# Attempts to Remove the GIL & Other Workarounds
+# Removal Attempts & Workarounds
 
-- **1996 — Greg Stein's free-threaded patch**<br>
+- **1996: Greg Stein's free-threaded patch**<br>
   Fine-grained locks, ~2× slower single-threaded, rejected
-- **2008 (2.6) — `multiprocessing`**<br>
+- **2008 (2.6): `multiprocessing`**<br>
   Sidestep the GIL with separate processes
-- **2011 (3.2) — New GIL**<br>
+- **2011 (3.2): New GIL**<br>
   100-opcode counter replaced with a 5ms timer; releaser waits for another thread before re-acquiring
-- **2014–15 (3.4, 3.5) — `asyncio` / `async`-`await`**<br>
-  Removes the *I/O* motivation for threads (but not the CPU one)
-- **2016 — Gilectomy**<br>
-  Another attempt; still couldn't clear the single-threaded bar
+- **2014–15 (3.4, 3.5): `asyncio` / `async`-`await`**<br>
+  Removes the I/O motivation for threads (but not the CPU one)
+- **2016: Gilectomy**<br>
+  Another attempt; still couldn't clear the single-threaded performance bar
 
 ---
 
-# Attempts to Remove the GIL & Other Workarounds (continued)
+# Removal Attempts & Workarounds (continued)
 
-- **2022 (3.11) — Adaptive interpreter**<br>
+- **2022 (3.11): Adaptive interpreter**<br>
   Check points move from *every opcode* to **backward jumps and function calls only**<br>
   `counter += 1` becomes atomic in practice
-- **2023 (3.12, PEP 684) — Per-interpreter GIL**<br>
+- **2023 (3.12, PEP 684): Per-interpreter GIL**<br>
   One process, many interpreters, one GIL each<br>
   Shared address space, but isolated object worlds (channels, not shared objects)<br>
   Prep for subinterpreters
