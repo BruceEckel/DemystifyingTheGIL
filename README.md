@@ -63,7 +63,15 @@ make present   # launch the Slidev slide preview, with auto-reload on edits
 
 ## The Book
 
-`book/` contains a book that grew out of preparing the talk. It explains why the GIL exists, why removing it has been so difficult, and what changes when you turn it off. Chapters in reading order:
+`book/` contains a book that grew out of preparing the talk. It explains why the GIL exists, why removing it has been so difficult, and what changes when you turn it off. It's published at [bruceeckel.github.io/DemystifyingTheGIL](https://bruceeckel.github.io/DemystifyingTheGIL/), built from `book/src/` with [mdBook](https://rust-lang.github.io/mdBook/) and deployed automatically by `.github/workflows/pages.yml` on every push to `main` that touches `book/`.
+
+To preview it locally, [install mdBook](https://rust-lang.github.io/mdBook/guide/installation.html) and run:
+
+```
+mdbook serve book
+```
+
+Chapters in reading order:
 
 1. **Preface**: origin of the talk and the book
 2. **Concurrency**: concurrency vs. parallelism, threads vs. processes, race conditions

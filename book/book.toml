@@ -1,0 +1,15 @@
+[book]
+title = "Demystifying The GIL"
+authors = ["Bruce Eckel"]
+description = "Why the GIL exists, why removing it was so hard, and what changes when you turn it off."
+language = "en"
+src = "src"
+
+[build]
+create-missing = false
+
+[output.html]
+default-theme = "light"
+preferred-dark-theme = "navy"
+git-repository-url = "https://github.com/BruceEckel/DemystifyingTheGIL"
+edit-url-template = "https://github.com/BruceEckel/DemystifyingTheGIL/edit/main/book/{path}"
