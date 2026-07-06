@@ -1,6 +1,6 @@
 # Preface
 
-This book was produced while developing my 2025 Pycon presentation titled "Demystifying the GIL."
+This book was produced while developing my 2026 Pycon presentation titled "Demystifying the GIL."
 That presentation was inspired by a conversation with Python's creator,
 Guido van Rossum, a year or so prior.
 Guido made a comment to the effect of,
